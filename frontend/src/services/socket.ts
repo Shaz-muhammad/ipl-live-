@@ -10,7 +10,6 @@ export function connectSocket(): Socket {
   if (socket) return socket;
 
   if (!SOCKET_URL) {
-    // eslint-disable-next-line no-console
     console.warn("VITE_API_BASE_URL is not set. Socket connection will fail.");
   }
 
