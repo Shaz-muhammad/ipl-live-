@@ -14,6 +14,6 @@
     "lint": "npm -w frontend run lint"
   },
   "optionalDependencies": {
-    "@rollup/rollup-linux-x64-gnu": "^4.52.3"
+    "@rollup/rollup-linux-x64-gnu": "^4.60.0"
   }
 }
