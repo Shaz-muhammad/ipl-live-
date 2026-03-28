@@ -40,7 +40,8 @@ const Contact = () => {
     try {
       const res = await api.post("/contact", formData);
       
-      if (res.data?.ok) {
+      // Handle both success formats (ok or success)
+      if (res.data?.success || res.data?.ok) {
         setStatus("success");
         setStatusMsg(res.data.message || "Message delivered successfully!");
         setFormData({ name: "", email: "", subject: "", message: "" });

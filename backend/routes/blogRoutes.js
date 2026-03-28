@@ -27,6 +27,10 @@ router.get("/blogs", async (req, res) => {
 });
 
 // 📧 Contact Submissions (Real Execution)
+router.get("/contact", (req, res) => {
+  res.json({ ok: true, message: "Contact GET route is active. Use POST to submit data." });
+});
+
 router.post("/contact", async (req, res) => {
   console.log("📥 Received POST /contact request:", req.body);
   try {
@@ -35,16 +39,16 @@ router.post("/contact", async (req, res) => {
     // 1. Validation
     if (!name?.trim() || !email?.trim() || !subject?.trim() || !message?.trim()) {
       console.warn("⚠️ Validation failed: Missing fields");
-      return res.status(400).json({ error: "All fields are required" });
+      return res.status(400).json({ success: false, error: "All fields are required" });
     }
 
     const emailRegex = /^\S+@\S+\.\S+$/;
     if (!emailRegex.test(email)) {
       console.warn("⚠️ Validation failed: Invalid email", email);
-      return res.status(400).json({ error: "Invalid email format" });
+      return res.status(400).json({ success: false, error: "Invalid email format" });
     }
 
-    // 2. Store in MongoDB (TASK 1)
+    // 2. Store in MongoDB
     let saved = false;
     try {
       await Contact.create({ 
@@ -58,16 +62,17 @@ router.post("/contact", async (req, res) => {
       console.log(`✅ MongoDB: Message from ${name} saved.`);
     } catch (err) {
       console.error("❌ MongoDB Error:", err.message);
-      return res.status(500).json({ error: "Database error: Could not save message" });
+      return res.status(500).json({ success: false, error: "Database error: Could not save message" });
     }
 
-    // 3. Send Emails (TASK 2 & 3)
+    // 3. Send Emails
     console.log("📨 Executing email delivery tasks...");
     const emailStatus = await sendContactEmails({ name, email, subject, message });
 
     if (!emailStatus.supportEmailSent) {
       console.error("❌ Support Email Error:", emailStatus.error);
       return res.status(502).json({ 
+        success: false,
         ok: false,
         saved,
         supportEmailSent: false,
@@ -79,6 +84,7 @@ router.post("/contact", async (req, res) => {
     // 4. Final Success Response
     console.log("✨ Contact flow completed successfully.");
     res.status(201).json({ 
+      success: true,
       ok: true, 
       saved,
       supportEmailSent: true,
@@ -89,7 +95,7 @@ router.post("/contact", async (req, res) => {
     });
   } catch (err) {
     console.error("❌ Unexpected Controller Error:", err.message);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ success: false, error: "Internal server error" });
   }
 });
 
