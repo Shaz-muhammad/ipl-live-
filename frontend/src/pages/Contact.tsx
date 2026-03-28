@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -12,6 +12,16 @@ const Contact = () => {
   const [statusMsg, setStatusMsg] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  useEffect(() => {
+    if (status === "success") {
+      const timer = setTimeout(() => {
+        setStatus("idle");
+        setStatusMsg("");
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [status]);
+
   const validate = () => {
     const newErrors: Record<string, string> = {};
     if (!formData.name.trim()) newErrors.name = "Name is required";
@@ -24,8 +34,26 @@ const Contact = () => {
     return newErrors;
   };
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    // Clear error for this field
+    if (errors[name]) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next[name];
+        return next;
+      });
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Clear previous status
+    setStatus("idle");
+    setStatusMsg("");
+    
     const newErrors = validate();
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -33,8 +61,6 @@ const Contact = () => {
     }
 
     setIsSubmitting(true);
-    setStatus("idle");
-    setStatusMsg("");
     setErrors({});
 
     try {
@@ -158,8 +184,9 @@ const Contact = () => {
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1">Full Name</label>
                   <input
+                    name="name"
                     value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    onChange={handleInputChange}
                     placeholder="John Doe"
                     className={`w-full px-4 py-3 bg-secondary/50 border ${errors.name ? 'border-destructive/50' : 'border-border/50'} rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-sm`}
                   />
@@ -169,8 +196,9 @@ const Contact = () => {
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1">Email Address</label>
                   <input
+                    name="email"
                     value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    onChange={handleInputChange}
                     placeholder="john@example.com"
                     className={`w-full px-4 py-3 bg-secondary/50 border ${errors.email ? 'border-destructive/50' : 'border-border/50'} rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-sm`}
                   />
@@ -181,8 +209,9 @@ const Contact = () => {
               <div className="space-y-2">
                 <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1">Subject</label>
                 <input
+                  name="subject"
                   value={formData.subject}
-                  onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                  onChange={handleInputChange}
                   placeholder="e.g. Partnership Query"
                   className={`w-full px-4 py-3 bg-secondary/50 border ${errors.subject ? 'border-destructive/50' : 'border-border/50'} rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-sm`}
                 />
@@ -192,9 +221,10 @@ const Contact = () => {
               <div className="space-y-2">
                 <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1">Your Message</label>
                 <textarea
+                  name="message"
                   rows={4}
                   value={formData.message}
-                  onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                  onChange={handleInputChange}
                   placeholder="How can we help you?"
                   className={`w-full px-4 py-3 bg-secondary/50 border ${errors.message ? 'border-destructive/50' : 'border-border/50'} rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-sm resize-none`}
                 />

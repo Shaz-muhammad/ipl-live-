@@ -126,13 +126,38 @@ const MatchDetails = () => {
             </div>
           </div>
 
-          <p className="text-center text-sm font-heading font-semibold mt-4 neon-text-accent">
-            {match.statusText}
-          </p>
+          <div className="mt-6 space-y-3 text-center border-t border-border/20 pt-4">
+            {match.status === "finished" && match.result && (
+              <p className="text-sm md:text-base font-bold neon-text uppercase tracking-widest bg-secondary/20 py-2 rounded-lg max-w-md mx-auto">
+                {match.result}
+              </p>
+            )}
 
-          <p className="text-center text-[10px] text-muted-foreground mt-1">
-            {match.venue}
-          </p>
+            {match.status === "live" && match.currentInnings === "2nd Innings" && match.target && (
+              <div className="flex justify-center gap-6 text-xs md:text-sm font-bold neon-text-accent uppercase tracking-widest bg-primary/5 py-2 rounded-lg border border-primary/20">
+                <span>Target: {match.target}</span>
+                {match.rrr && match.rrr !== "0" && <span>RRR: {match.rrr}</span>}
+              </div>
+            )}
+
+            {match.status !== "upcoming" && match.tossWinner && match.tossChoice && (
+              <p className="text-xs text-muted-foreground italic font-body">
+                {match.tossWinner} won the toss and elected to {match.tossChoice} first.
+              </p>
+            )}
+
+            <motion.p
+              className="text-sm font-heading font-semibold neon-text-accent"
+              animate={{ opacity: [0.7, 1, 0.7] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              {match.statusText}
+            </motion.p>
+
+            <p className="text-[10px] text-muted-foreground opacity-70">
+              {match.venue} • {match.date}
+            </p>
+          </div>
         </motion.div>
 
         {/* Tabs */}

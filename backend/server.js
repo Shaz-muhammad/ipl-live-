@@ -62,6 +62,12 @@ function mergeScheduleWithLive(schedule, liveMatches) {
         statusText: live.status || "Live",
         matchStarted: !!live.matchStarted,
         matchEnded: !!live.matchEnded,
+        venue: live.venue || fixture.venue,
+        tossWinner: live.tossWinner || "",
+        tossChoice: live.tossChoice || "",
+        result: live.matchEnded ? live.status : "",
+        target: live.score && live.score.length === 2 ? Number(live.score[0]?.r || live.score[0]?.R || 0) + 1 : 0,
+        currentInnings: live.score ? (live.score.length === 2 ? "2nd Innings" : "1st Innings") : "",
       };
     }
 
@@ -74,6 +80,7 @@ function mergeScheduleWithLive(schedule, liveMatches) {
         statusText: `Starts at ${fixture.time} IST`,
         score: [],
         teams: [fixture.homeTeam, fixture.awayTeam],
+        venue: fixture.venue,
       };
     }
 
@@ -83,6 +90,8 @@ function mergeScheduleWithLive(schedule, liveMatches) {
       statusText: fixture.statusText || "Match completed",
       score: [],
       teams: [fixture.homeTeam, fixture.awayTeam],
+      venue: fixture.venue,
+      result: fixture.statusText || "",
     };
   });
 

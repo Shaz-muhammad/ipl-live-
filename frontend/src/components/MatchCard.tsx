@@ -20,6 +20,12 @@ export interface Match {
   team2Score: string;
   status: "live" | "upcoming" | "finished";
   statusText: string;
+  tossWinner?: string;
+  tossChoice?: string;
+  result?: string;
+  target?: number;
+  rrr?: string;
+  currentInnings?: string;
   venue: string;
   date: string;
   time?: string;
@@ -132,14 +138,34 @@ export function MatchCard({ match, index, onTeamClick }: Props) {
         </div>
       </div>
 
-      {/* Status */}
-      <p className="text-xs text-center mt-3 text-muted-foreground font-heading">
-        {match.statusText || "Match info unavailable"}
-      </p>
+      {/* Match Meta Information */}
+      <div className="mt-4 space-y-2">
+        {match.status === "finished" && match.result && (
+          <p className="text-xs font-bold text-center neon-text uppercase tracking-wider animate-pulse">
+            {match.result}
+          </p>
+        )}
 
-      <p className="text-[10px] text-center mt-1 text-muted-foreground">
-        {match.venue || "Unknown venue"}
-      </p>
+        {match.status === "live" && match.currentInnings === "2nd Innings" && match.target && (
+          <p className="text-[10px] text-center neon-text-accent font-bold uppercase tracking-widest">
+            Target: {match.target} {match.rrr && match.rrr !== "0" && `• RRR: ${match.rrr}`}
+          </p>
+        )}
+
+        {match.status === "live" && match.tossWinner && match.tossChoice && (
+          <p className="text-[10px] text-center text-muted-foreground italic">
+            {match.tossWinner} won the toss and elected to {match.tossChoice} first.
+          </p>
+        )}
+
+        <p className="text-xs text-center text-muted-foreground font-heading border-t border-border/20 pt-2">
+          {match.statusText || "Match info unavailable"}
+        </p>
+
+        <p className="text-[10px] text-center text-muted-foreground opacity-70">
+          {match.venue || "Unknown venue"}
+        </p>
+      </div>
     </motion.div>
   );
 }

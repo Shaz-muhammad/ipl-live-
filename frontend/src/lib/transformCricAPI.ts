@@ -68,6 +68,12 @@ export interface Match {
   team2Overs: string;
   status: "live" | "upcoming" | "finished";
   statusText: string;
+  tossWinner?: string;
+  tossChoice?: string;
+  result?: string;
+  target?: number;
+  rrr?: string;
+  currentInnings?: string;
   venue: string;
   date: string;
   time: string;

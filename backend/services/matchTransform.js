@@ -86,6 +86,11 @@ export function buildMatchDetails({ matchId, matchInfoRaw, matchScorecardRaw }) 
   const status = getMatchStatus(matchInfo);
   const statusText = matchInfo?.status ?? matchInfo?.statusText ?? matchInfo?.event ?? "";
 
+  const tossWinner = matchInfo?.tossWinner ?? "";
+  const tossChoice = matchInfo?.tossChoice ?? "";
+
+  const result = matchInfo?.matchEnded ? statusText : "";
+
   const teams = asArray(matchInfo?.teams ?? []);
   const team1Name = teams[0] ?? "";
   const team2Name = teams[1] ?? "";
@@ -95,6 +100,34 @@ export function buildMatchDetails({ matchId, matchInfoRaw, matchScorecardRaw }) 
 
   const { score: team1Score, overs: team1Overs } = parseScoreFromInnings(matchInfo?.score, team1Name);
   const { score: team2Score, overs: team2Overs } = parseScoreFromInnings(matchInfo?.score, team2Name);
+
+  // 📈 Calculate Target & RRR
+  let target = 0;
+  let rrr = "0";
+  let currentInnings = "";
+
+  const scoreArr = asArray(matchInfo?.score);
+  if (scoreArr.length === 1) {
+    currentInnings = "1st Innings";
+  } else if (scoreArr.length === 2) {
+    currentInnings = "2nd Innings";
+    // Target is usually 1st innings runs + 1
+    const firstInnings = scoreArr[0];
+    const firstRuns = Number(firstInnings?.r ?? firstInnings?.R ?? 0);
+    target = firstRuns + 1;
+
+    // Calculate RRR
+    const secondInnings = scoreArr[1];
+    const secondRuns = Number(secondInnings?.r ?? secondInnings?.R ?? 0);
+    const secondOvers = Number(secondInnings?.o ?? secondInnings?.O ?? 0);
+    const runsRemaining = target - secondRuns;
+    const totalOvers = 20; // Assume T20/IPL
+    const oversRemaining = totalOvers - secondOvers;
+    
+    if (oversRemaining > 0 && runsRemaining > 0) {
+      rrr = (runsRemaining / oversRemaining).toFixed(2);
+    }
+  }
 
   const date = matchInfo?.date ?? matchInfo?.dateTimeGMT ?? "";
   const venue = matchInfo?.venue ?? "";
@@ -184,6 +217,12 @@ export function buildMatchDetails({ matchId, matchInfoRaw, matchScorecardRaw }) 
     team2Overs: team2Overs ?? "",
     status,
     statusText: String(statusText ?? ""),
+    tossWinner: String(tossWinner ?? ""),
+    tossChoice: String(tossChoice ?? ""),
+    result: String(result ?? ""),
+    target: Number(target || 0),
+    rrr: String(rrr || "0"),
+    currentInnings: String(currentInnings || ""),
     venue: String(venue ?? ""),
     date: String(date ?? ""),
     batting,

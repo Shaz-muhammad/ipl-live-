@@ -22,6 +22,12 @@ export interface Match {
   team2Overs: string;
   status: "live" | "upcoming" | "finished";
   statusText: string;
+  tossWinner?: string;
+  tossChoice?: string;
+  result?: string;
+  target?: number;
+  rrr?: string;
+  currentInnings?: string;
   venue: string;
   date?: string;
   time?: string;
@@ -125,14 +131,39 @@ export function HeroMatchCard({ match, onTeamClick }: Props) {
         </motion.div>
       </div>
 
-      {/* Status */}
-      <motion.p
-        className="text-center text-sm font-heading font-semibold mt-4 neon-text-accent"
-        animate={{ opacity: [0.7, 1, 0.7] }}
-        transition={{ duration: 2, repeat: Infinity }}
-      >
-        {match.statusText || "Match info unavailable"}
-      </motion.p>
+      {/* Status & Meta Info */}
+      <div className="mt-6 space-y-3 text-center">
+        {match.status === "finished" && match.result && (
+          <motion.p
+            initial={{ scale: 0.9 }}
+            animate={{ scale: 1 }}
+            className="text-sm md:text-base font-bold neon-text uppercase tracking-widest bg-secondary/20 py-2 rounded-lg"
+          >
+            {match.result}
+          </motion.p>
+        )}
+
+        {match.status === "live" && match.currentInnings === "2nd Innings" && match.target && (
+          <div className="flex justify-center gap-4 text-[10px] md:text-xs font-bold neon-text-accent uppercase tracking-wider">
+            <span>Target: {match.target}</span>
+            {match.rrr && match.rrr !== "0" && <span>RRR: {match.rrr}</span>}
+          </div>
+        )}
+
+        {match.status !== "upcoming" && match.tossWinner && match.tossChoice && (
+          <p className="text-xs text-muted-foreground italic font-body">
+            {match.tossWinner} won the toss and elected to {match.tossChoice} first.
+          </p>
+        )}
+
+        <motion.p
+          className="text-sm font-heading font-semibold neon-text-accent"
+          animate={{ opacity: [0.7, 1, 0.7] }}
+          transition={{ duration: 2, repeat: Infinity }}
+        >
+          {match.statusText || "Match info unavailable"}
+        </motion.p>
+      </div>
     </motion.div>
   );
 }
