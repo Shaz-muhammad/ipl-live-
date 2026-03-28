@@ -112,6 +112,7 @@ async function start() {
     const allowedOrigins = [
       "http://localhost:8080",
       "http://localhost:5173",
+      "https://ipl-live-frontend.vercel.app",
       process.env.FRONTEND_URL,
     ].filter(Boolean);
 
