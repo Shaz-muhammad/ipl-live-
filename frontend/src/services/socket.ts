@@ -1,26 +1,27 @@
 import { io, type Socket } from "socket.io-client";
 
-const url = String(import.meta.env.VITE_SOCKET_URL || "").trim();
+const SOCKET_URL = String(
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000",
+).trim();
 
 let socket: Socket | null = null;
 
-export function connectSocket() {
+export function connectSocket(): Socket {
   if (socket) return socket;
 
-  if (!url) {
+  if (!SOCKET_URL) {
     // eslint-disable-next-line no-console
-    console.warn("VITE_SOCKET_URL is not set. Socket connection will fail.");
+    console.warn("VITE_API_BASE_URL is not set. Socket connection will fail.");
   }
 
-  socket = io(url, {
+  socket = io(SOCKET_URL, {
     autoConnect: true,
-    transports: ["websocket"],
+    transports: ["websocket", "polling"],
   });
 
   return socket;
 }
 
-export function getSocket() {
+export function getSocket(): Socket | null {
   return socket;
 }
-
