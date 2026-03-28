@@ -2,8 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { Header } from "@/components/Header";
 import { HeroMatchCard } from "@/components/HeroMatchCard";
 import { MatchCard } from "@/components/MatchCard";
-import { SectionHeader } from "@/components/SectionHeader";
-import { WatchLiveModal } from "@/components/WatchLiveModal";
+import { SectionHeader } from "@/components/SectionHeader"; 
+ import { BlogSection } from "@/components/BlogSection";
+ import { Footer } from "@/components/Footer";
+ import { WatchLiveModal } from "@/components/WatchLiveModal";
 import { AdminPanel } from "@/components/AdminPanel";
 import { useTeamTheme } from "@/hooks/useTeamTheme";
 import {
@@ -237,7 +239,11 @@ const Index = () => {
             </p>
           )}
         </section>
+
+        <BlogSection />
       </main>
+
+      <Footer />
 
       <div className="fixed bottom-0 left-0 right-0 z-40 glass-card border-t border-border/50 p-3 flex gap-3 sm:hidden">
         <button

@@ -6,6 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import { LiveBadge } from "@/components/LiveBadge";
 import { Scorecard } from "@/components/Scorecard";
 import { Commentary } from "@/components/Commentary";
+import { Footer } from "@/components/Footer";
 import { api } from "@/services/api";
 import type { Match } from "@/lib/transformCricAPI";
 
@@ -158,6 +159,8 @@ const MatchDetails = () => {
           <Commentary entries={match.commentary} />
         )}
       </main>
+
+      <Footer />
     </div>
   );
 };
