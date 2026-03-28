@@ -12,6 +12,8 @@
     "build:frontend": "npm -w frontend run build",
     "build": "npm run build:frontend",
     "lint": "npm -w frontend run lint"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "^4.52.3"
   }
 }
-
