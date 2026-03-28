@@ -1,0 +1,44 @@
+import { lazy, Suspense } from 'react';
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { Toaster } from "@/components/ui/toaster";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import Index from "./pages/Index";
+import NotFound from "./pages/NotFound";
+import { ThemeProvider } from "@/contexts/ThemeContext";
+
+const MatchDetails = lazy(() => import("./pages/MatchDetails"));
+
+const queryClient = new QueryClient();
+
+const Loading = () => (
+  <div className="min-h-screen bg-background flex items-center justify-center">
+    <div className="text-center space-y-3">
+      <span className="text-4xl animate-float inline-block">🏏</span>
+      <div className="skeleton-neon h-4 w-32 mx-auto" />
+    </div>
+  </div>
+);
+
+const App = () => (
+  <ThemeProvider>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Suspense fallback={<Loading />}>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/match/:id" element={<MatchDetails />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </ThemeProvider>
+);
+
+export default App;

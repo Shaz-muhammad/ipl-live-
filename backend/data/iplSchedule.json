@@ -1,0 +1,742 @@
+[
+  {
+    "id": "ipl-1",
+    "homeTeam": "RCB",
+    "awayTeam": "SRH",
+    "dateRaw": "2026-03-28",
+    "date": "Sat, 28 Mar",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Bengaluru"
+  },
+  {
+    "id": "ipl-2",
+    "homeTeam": "MI",
+    "awayTeam": "KKR",
+    "dateRaw": "2026-03-29",
+    "date": "Sun, 29 Mar",
+    "timeRaw": "15:30",
+    "time": "3:30 PM",
+    "venue": "Mumbai"
+  },
+  {
+    "id": "ipl-3",
+    "homeTeam": "CSK",
+    "awayTeam": "RR",
+    "dateRaw": "2026-03-29",
+    "date": "Sun, 29 Mar",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Chennai"
+  },
+  {
+    "id": "ipl-4",
+    "homeTeam": "GT",
+    "awayTeam": "PBKS",
+    "dateRaw": "2026-03-30",
+    "date": "Mon, 30 Mar",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Ahmedabad"
+  },
+  {
+    "id": "ipl-5",
+    "homeTeam": "DC",
+    "awayTeam": "LSG",
+    "dateRaw": "2026-03-31",
+    "date": "Tue, 31 Mar",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Delhi"
+  },
+  {
+    "id": "ipl-6",
+    "homeTeam": "SRH",
+    "awayTeam": "KKR",
+    "dateRaw": "2026-04-01",
+    "date": "Wed, 01 Apr",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Hyderabad"
+  },
+  {
+    "id": "ipl-7",
+    "homeTeam": "PBKS",
+    "awayTeam": "CSK",
+    "dateRaw": "2026-04-02",
+    "date": "Thu, 02 Apr",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Mohali"
+  },
+  {
+    "id": "ipl-8",
+    "homeTeam": "MI",
+    "awayTeam": "DC",
+    "dateRaw": "2026-04-03",
+    "date": "Fri, 03 Apr",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Mumbai"
+  },
+  {
+    "id": "ipl-9",
+    "homeTeam": "RR",
+    "awayTeam": "GT",
+    "dateRaw": "2026-04-04",
+    "date": "Sat, 04 Apr",
+    "timeRaw": "15:30",
+    "time": "3:30 PM",
+    "venue": "Jaipur"
+  },
+  {
+    "id": "ipl-10",
+    "homeTeam": "LSG",
+    "awayTeam": "SRH",
+    "dateRaw": "2026-04-04",
+    "date": "Sat, 04 Apr",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Lucknow"
+  },
+  {
+    "id": "ipl-11",
+    "homeTeam": "CSK",
+    "awayTeam": "RCB",
+    "dateRaw": "2026-04-05",
+    "date": "Sun, 05 Apr",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Chennai"
+  },
+  {
+    "id": "ipl-12",
+    "homeTeam": "PBKS",
+    "awayTeam": "KKR",
+    "dateRaw": "2026-04-06",
+    "date": "Mon, 06 Apr",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Mohali"
+  },
+  {
+    "id": "ipl-13",
+    "homeTeam": "MI",
+    "awayTeam": "RR",
+    "dateRaw": "2026-04-07",
+    "date": "Tue, 07 Apr",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Mumbai"
+  },
+  {
+    "id": "ipl-14",
+    "homeTeam": "GT",
+    "awayTeam": "DC",
+    "dateRaw": "2026-04-08",
+    "date": "Wed, 08 Apr",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Ahmedabad"
+  },
+  {
+    "id": "ipl-15",
+    "homeTeam": "LSG",
+    "awayTeam": "KKR",
+    "dateRaw": "2026-04-09",
+    "date": "Thu, 09 Apr",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Lucknow"
+  },
+  {
+    "id": "ipl-16",
+    "homeTeam": "RCB",
+    "awayTeam": "RR",
+    "dateRaw": "2026-04-10",
+    "date": "Fri, 10 Apr",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Bengaluru"
+  },
+  {
+    "id": "ipl-17",
+    "homeTeam": "SRH",
+    "awayTeam": "PBKS",
+    "dateRaw": "2026-04-11",
+    "date": "Sat, 11 Apr",
+    "timeRaw": "15:30",
+    "time": "3:30 PM",
+    "venue": "Hyderabad"
+  },
+  {
+    "id": "ipl-18",
+    "homeTeam": "DC",
+    "awayTeam": "CSK",
+    "dateRaw": "2026-04-11",
+    "date": "Sat, 11 Apr",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Delhi"
+  },
+  {
+    "id": "ipl-19",
+    "homeTeam": "GT",
+    "awayTeam": "LSG",
+    "dateRaw": "2026-04-12",
+    "date": "Sun, 12 Apr",
+    "timeRaw": "15:30",
+    "time": "3:30 PM",
+    "venue": "Ahmedabad"
+  },
+  {
+    "id": "ipl-20",
+    "homeTeam": "RCB",
+    "awayTeam": "MI",
+    "dateRaw": "2026-04-12",
+    "date": "Sun, 12 Apr",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Bengaluru"
+  },
+  {
+    "id": "ipl-21",
+    "homeTeam": "KKR",
+    "awayTeam": "CSK",
+    "dateRaw": "2026-04-13",
+    "date": "Mon, 13 Apr",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Kolkata"
+  },
+  {
+    "id": "ipl-22",
+    "homeTeam": "RR",
+    "awayTeam": "PBKS",
+    "dateRaw": "2026-04-14",
+    "date": "Tue, 14 Apr",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Jaipur"
+  },
+  {
+    "id": "ipl-23",
+    "homeTeam": "MI",
+    "awayTeam": "GT",
+    "dateRaw": "2026-04-15",
+    "date": "Wed, 15 Apr",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Mumbai"
+  },
+  {
+    "id": "ipl-24",
+    "homeTeam": "LSG",
+    "awayTeam": "RCB",
+    "dateRaw": "2026-04-16",
+    "date": "Thu, 16 Apr",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Lucknow"
+  },
+  {
+    "id": "ipl-25",
+    "homeTeam": "SRH",
+    "awayTeam": "DC",
+    "dateRaw": "2026-04-17",
+    "date": "Fri, 17 Apr",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Hyderabad"
+  },
+  {
+    "id": "ipl-26",
+    "homeTeam": "PBKS",
+    "awayTeam": "MI",
+    "dateRaw": "2026-04-18",
+    "date": "Sat, 18 Apr",
+    "timeRaw": "15:30",
+    "time": "3:30 PM",
+    "venue": "Mohali"
+  },
+  {
+    "id": "ipl-27",
+    "homeTeam": "CSK",
+    "awayTeam": "GT",
+    "dateRaw": "2026-04-18",
+    "date": "Sat, 18 Apr",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Chennai"
+  },
+  {
+    "id": "ipl-28",
+    "homeTeam": "KKR",
+    "awayTeam": "RR",
+    "dateRaw": "2026-04-19",
+    "date": "Sun, 19 Apr",
+    "timeRaw": "15:30",
+    "time": "3:30 PM",
+    "venue": "Kolkata"
+  },
+  {
+    "id": "ipl-29",
+    "homeTeam": "DC",
+    "awayTeam": "RCB",
+    "dateRaw": "2026-04-19",
+    "date": "Sun, 19 Apr",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Delhi"
+  },
+  {
+    "id": "ipl-30",
+    "homeTeam": "LSG",
+    "awayTeam": "PBKS",
+    "dateRaw": "2026-04-20",
+    "date": "Mon, 20 Apr",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Lucknow"
+  },
+  {
+    "id": "ipl-31",
+    "homeTeam": "GT",
+    "awayTeam": "KKR",
+    "dateRaw": "2026-04-21",
+    "date": "Tue, 21 Apr",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Ahmedabad"
+  },
+  {
+    "id": "ipl-32",
+    "homeTeam": "MI",
+    "awayTeam": "SRH",
+    "dateRaw": "2026-04-22",
+    "date": "Wed, 22 Apr",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Mumbai"
+  },
+  {
+    "id": "ipl-33",
+    "homeTeam": "RR",
+    "awayTeam": "CSK",
+    "dateRaw": "2026-04-23",
+    "date": "Thu, 23 Apr",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Jaipur"
+  },
+  {
+    "id": "ipl-34",
+    "homeTeam": "RCB",
+    "awayTeam": "GT",
+    "dateRaw": "2026-04-24",
+    "date": "Fri, 24 Apr",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Bengaluru"
+  },
+  {
+    "id": "ipl-35",
+    "homeTeam": "PBKS",
+    "awayTeam": "DC",
+    "dateRaw": "2026-04-25",
+    "date": "Sat, 25 Apr",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Mohali"
+  },
+  {
+    "id": "ipl-36",
+    "homeTeam": "KKR",
+    "awayTeam": "MI",
+    "dateRaw": "2026-04-26",
+    "date": "Sun, 26 Apr",
+    "timeRaw": "15:30",
+    "time": "3:30 PM",
+    "venue": "Kolkata"
+  },
+  {
+    "id": "ipl-37",
+    "homeTeam": "SRH",
+    "awayTeam": "LSG",
+    "dateRaw": "2026-04-26",
+    "date": "Sun, 26 Apr",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Hyderabad"
+  },
+  {
+    "id": "ipl-38",
+    "homeTeam": "CSK",
+    "awayTeam": "PBKS",
+    "dateRaw": "2026-04-27",
+    "date": "Mon, 27 Apr",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Chennai"
+  },
+  {
+    "id": "ipl-39",
+    "homeTeam": "DC",
+    "awayTeam": "RR",
+    "dateRaw": "2026-04-28",
+    "date": "Tue, 28 Apr",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Delhi"
+  },
+  {
+    "id": "ipl-40",
+    "homeTeam": "GT",
+    "awayTeam": "RCB",
+    "dateRaw": "2026-04-29",
+    "date": "Wed, 29 Apr",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Ahmedabad"
+  },
+  {
+    "id": "ipl-41",
+    "homeTeam": "MI",
+    "awayTeam": "CSK",
+    "dateRaw": "2026-04-30",
+    "date": "Thu, 30 Apr",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Mumbai"
+  },
+  {
+    "id": "ipl-42",
+    "homeTeam": "LSG",
+    "awayTeam": "DC",
+    "dateRaw": "2026-05-01",
+    "date": "Fri, 01 May",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Lucknow"
+  },
+  {
+    "id": "ipl-43",
+    "homeTeam": "RR",
+    "awayTeam": "SRH",
+    "dateRaw": "2026-05-02",
+    "date": "Sat, 02 May",
+    "timeRaw": "15:30",
+    "time": "3:30 PM",
+    "venue": "Jaipur"
+  },
+  {
+    "id": "ipl-44",
+    "homeTeam": "KKR",
+    "awayTeam": "PBKS",
+    "dateRaw": "2026-05-02",
+    "date": "Sat, 02 May",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Kolkata"
+  },
+  {
+    "id": "ipl-45",
+    "homeTeam": "RCB",
+    "awayTeam": "LSG",
+    "dateRaw": "2026-05-03",
+    "date": "Sun, 03 May",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Bengaluru"
+  },
+  {
+    "id": "ipl-46",
+    "homeTeam": "CSK",
+    "awayTeam": "DC",
+    "dateRaw": "2026-05-04",
+    "date": "Mon, 04 May",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Chennai"
+  },
+  {
+    "id": "ipl-47",
+    "homeTeam": "GT",
+    "awayTeam": "MI",
+    "dateRaw": "2026-05-05",
+    "date": "Tue, 05 May",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Ahmedabad"
+  },
+  {
+    "id": "ipl-48",
+    "homeTeam": "SRH",
+    "awayTeam": "RCB",
+    "dateRaw": "2026-05-06",
+    "date": "Wed, 06 May",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Hyderabad"
+  },
+  {
+    "id": "ipl-49",
+    "homeTeam": "PBKS",
+    "awayTeam": "RR",
+    "dateRaw": "2026-05-07",
+    "date": "Thu, 07 May",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Mohali"
+  },
+  {
+    "id": "ipl-50",
+    "homeTeam": "KKR",
+    "awayTeam": "GT",
+    "dateRaw": "2026-05-08",
+    "date": "Fri, 08 May",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Kolkata"
+  },
+  {
+    "id": "ipl-51",
+    "homeTeam": "MI",
+    "awayTeam": "PBKS",
+    "dateRaw": "2026-05-09",
+    "date": "Sat, 09 May",
+    "timeRaw": "15:30",
+    "time": "3:30 PM",
+    "venue": "Mumbai"
+  },
+  {
+    "id": "ipl-52",
+    "homeTeam": "CSK",
+    "awayTeam": "LSG",
+    "dateRaw": "2026-05-09",
+    "date": "Sat, 09 May",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Chennai"
+  },
+  {
+    "id": "ipl-53",
+    "homeTeam": "RR",
+    "awayTeam": "DC",
+    "dateRaw": "2026-05-10",
+    "date": "Sun, 10 May",
+    "timeRaw": "15:30",
+    "time": "3:30 PM",
+    "venue": "Jaipur"
+  },
+  {
+    "id": "ipl-54",
+    "homeTeam": "RCB",
+    "awayTeam": "KKR",
+    "dateRaw": "2026-05-10",
+    "date": "Sun, 10 May",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Bengaluru"
+  },
+  {
+    "id": "ipl-55",
+    "homeTeam": "LSG",
+    "awayTeam": "GT",
+    "dateRaw": "2026-05-11",
+    "date": "Mon, 11 May",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Lucknow"
+  },
+  {
+    "id": "ipl-56",
+    "homeTeam": "SRH",
+    "awayTeam": "MI",
+    "dateRaw": "2026-05-12",
+    "date": "Tue, 12 May",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Hyderabad"
+  },
+  {
+    "id": "ipl-57",
+    "homeTeam": "DC",
+    "awayTeam": "KKR",
+    "dateRaw": "2026-05-13",
+    "date": "Wed, 13 May",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Delhi"
+  },
+  {
+    "id": "ipl-58",
+    "homeTeam": "GT",
+    "awayTeam": "CSK",
+    "dateRaw": "2026-05-14",
+    "date": "Thu, 14 May",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Ahmedabad"
+  },
+  {
+    "id": "ipl-59",
+    "homeTeam": "PBKS",
+    "awayTeam": "RCB",
+    "dateRaw": "2026-05-15",
+    "date": "Fri, 15 May",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Mohali"
+  },
+  {
+    "id": "ipl-60",
+    "homeTeam": "RR",
+    "awayTeam": "LSG",
+    "dateRaw": "2026-05-16",
+    "date": "Sat, 16 May",
+    "timeRaw": "15:30",
+    "time": "3:30 PM",
+    "venue": "Jaipur"
+  },
+  {
+    "id": "ipl-61",
+    "homeTeam": "MI",
+    "awayTeam": "RCB",
+    "dateRaw": "2026-05-16",
+    "date": "Sat, 16 May",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Mumbai"
+  },
+  {
+    "id": "ipl-62",
+    "homeTeam": "CSK",
+    "awayTeam": "KKR",
+    "dateRaw": "2026-05-17",
+    "date": "Sun, 17 May",
+    "timeRaw": "15:30",
+    "time": "3:30 PM",
+    "venue": "Chennai"
+  },
+  {
+    "id": "ipl-63",
+    "homeTeam": "DC",
+    "awayTeam": "GT",
+    "dateRaw": "2026-05-17",
+    "date": "Sun, 17 May",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Delhi"
+  },
+  {
+    "id": "ipl-64",
+    "homeTeam": "LSG",
+    "awayTeam": "MI",
+    "dateRaw": "2026-05-18",
+    "date": "Mon, 18 May",
+    "timeRaw": "15:30",
+    "time": "3:30 PM",
+    "venue": "Lucknow"
+  },
+  {
+    "id": "ipl-65",
+    "homeTeam": "MI",
+    "awayTeam": "CSK",
+    "dateRaw": "2026-05-18",
+    "date": "Mon, 18 May",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Mumbai"
+  },
+  {
+    "id": "ipl-66",
+    "homeTeam": "RCB",
+    "awayTeam": "KKR",
+    "dateRaw": "2026-05-19",
+    "date": "Tue, 19 May",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Bengaluru"
+  },
+  {
+    "id": "ipl-67",
+    "homeTeam": "SRH",
+    "awayTeam": "RR",
+    "dateRaw": "2026-05-20",
+    "date": "Wed, 20 May",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Hyderabad"
+  },
+  {
+    "id": "ipl-68",
+    "homeTeam": "GT",
+    "awayTeam": "DC",
+    "dateRaw": "2026-05-21",
+    "date": "Thu, 21 May",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Ahmedabad"
+  },
+  {
+    "id": "ipl-69",
+    "homeTeam": "PBKS",
+    "awayTeam": "LSG",
+    "dateRaw": "2026-05-22",
+    "date": "Fri, 22 May",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Mohali"
+  },
+  {
+    "id": "ipl-70",
+    "homeTeam": "CSK",
+    "awayTeam": "RCB",
+    "dateRaw": "2026-05-23",
+    "date": "Sat, 23 May",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Chennai"
+  },
+  {
+    "id": "ipl-71",
+    "homeTeam": "TBD1",
+    "awayTeam": "TBD2",
+    "dateRaw": "2026-05-25",
+    "date": "Mon, 25 May",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Qualifier 1"
+  },
+  {
+    "id": "ipl-72",
+    "homeTeam": "TBD3",
+    "awayTeam": "TBD4",
+    "dateRaw": "2026-05-26",
+    "date": "Tue, 26 May",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Eliminator"
+  },
+  {
+    "id": "ipl-73",
+    "homeTeam": "TBD2",
+    "awayTeam": "TBD4",
+    "dateRaw": "2026-05-28",
+    "date": "Thu, 28 May",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "Qualifier 2"
+  },
+  {
+    "id": "ipl-74",
+    "homeTeam": "TBD1",
+    "awayTeam": "TBD",
+    "dateRaw": "2026-05-30",
+    "date": "Sat, 30 May",
+    "timeRaw": "19:30",
+    "time": "7:30 PM",
+    "venue": "FINAL"
+  }
+]

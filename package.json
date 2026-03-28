@@ -1,0 +1,17 @@
+{
+  "name": "neon-score-stream",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "dev:frontend": "npm -w frontend run dev",
+    "dev:backend": "npm -w backend run dev",
+    "build:frontend": "npm -w frontend run build",
+    "build": "npm run build:frontend",
+    "lint": "npm -w frontend run lint"
+  }
+}
+
