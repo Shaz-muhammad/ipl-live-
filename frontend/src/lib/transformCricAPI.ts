@@ -60,6 +60,7 @@ export interface MergedMatch {
 
 export interface Match {
   id: string;
+  apiId?: string;
   team1: Team;
   team2: Team;
   team1Score: string;
@@ -143,8 +144,8 @@ export function transformMergedMatch(match: MergedMatch): Match {
   const t2 = parseScoreFromMerged(match.score, team2Name);
 
   return {
-    id: match.apiId || match.id || Math.random().toString(),
-
+    id: match.id || match.apiId || Math.random().toString(),
+    apiId: match.apiId,
     team1,
     team2,
 

@@ -14,6 +14,7 @@ export interface Team {
 
 export interface Match {
   id: string;
+  apiId?: string;
   team1: Team;
   team2: Team;
   team1Score: string;
@@ -48,7 +49,7 @@ export function HeroMatchCard({ match, onTeamClick }: Props) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      onClick={() => navigate(`/match/${match.id}`)}
+      onClick={() => navigate(`/match/${match.apiId || match.id}`)}
       className="glass-card neon-border cursor-pointer p-6 md:p-8 max-w-2xl mx-auto"
     >
       {/* Header */}

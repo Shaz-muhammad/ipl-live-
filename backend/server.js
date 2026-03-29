@@ -64,7 +64,6 @@ function mergeScheduleWithLive(schedule, liveMatches) {
 
       return {
         ...fixture,
-        id: live.id || fixture.id,
         apiId: live.id,
         team1,
         team2,

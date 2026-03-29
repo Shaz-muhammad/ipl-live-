@@ -27,14 +27,17 @@ export function WatchLiveModal({ open, onClose, matchIds }: Props) {
     Promise.all(
       matchIds.map(async (matchId) => {
         try {
+          console.log(`📡 Fetching links for matchId: ${matchId}`);
           const res = await api.get(
             `/admin/links/${encodeURIComponent(matchId)}`,
           );
+          console.log(`✅ Fetched for ${matchId}:`, res.data);
           return {
             matchId,
             links: Array.isArray(res.data?.links) ? res.data.links : [],
           };
-        } catch {
+        } catch (err) {
+          console.error(`❌ Error fetching links for ${matchId}:`, err);
           return {
             matchId,
             links: [],

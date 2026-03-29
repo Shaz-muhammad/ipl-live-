@@ -14,6 +14,7 @@ export interface Team {
 
 export interface Match {
   id: string;
+  apiId?: string;
   team1: Team;
   team2: Team;
   team1Score: string;
@@ -50,7 +51,7 @@ export function MatchCard({ match, index, onTeamClick }: Props) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1, duration: 0.4 }}
       whileHover={{ scale: 1.02, y: -4 }}
-      onClick={() => navigate(`/match/${match.id}`)}
+      onClick={() => navigate(`/match/${match.apiId || match.id}`)}
       className={`glass-card cursor-pointer p-5 transition-shadow duration-300 ${
         isLive ? "neon-border" : "border border-border"
       }`}

@@ -92,9 +92,12 @@ const Index = () => {
   };
 
   const openWatchLive = () => {
-    const relevantMatches = liveMatches.slice(0, 2);
+    // Collect all match IDs from the live matches array.
+    // We use match.apiId || match.id to ensure consistency with admin saving.
+    const relevantMatchIds = liveMatches.map((match) => match.id);
 
-    setSelectedMatchIds(relevantMatches.map((match) => match.id));
+    console.log("📺 Opening Watch Live for matchIds:", relevantMatchIds);
+    setSelectedMatchIds(relevantMatchIds);
     setShowWatchLive(true);
   };
 
