@@ -51,6 +51,10 @@ export interface MergedMatch {
   homeTeam?: string;
   awayTeam?: string;
   score?: ScoreEntry[];
+  team1Score?: string;
+  team2Score?: string;
+  team1Overs?: string;
+  team2Overs?: string;
   status: "live" | "upcoming" | "finished";
   statusText?: string;
   venue?: string;
@@ -134,14 +138,18 @@ function parseScoreFromMerged(
 
 // 🔥 SINGLE MATCH TRANSFORM
 export function transformMergedMatch(match: MergedMatch): Match {
-  const team1Name = match.teams?.[0] || match.homeTeam || "Team 1";
-  const team2Name = match.teams?.[1] || match.awayTeam || "Team 2";
+  // Use pre-normalized values if available (from backend Cricbuzz logic)
+  const team1Name = match.team1 || match.teams?.[0] || match.homeTeam || "Team 1";
+  const team2Name = match.team2 || match.teams?.[1] || match.awayTeam || "Team 2";
 
-  const team1 = createTeam(team1Name);
-  const team2 = createTeam(team2Name);
+  const team1 = createTeam(typeof team1Name === 'string' ? team1Name : "Team 1");
+  const team2 = createTeam(typeof team2Name === 'string' ? team2Name : "Team 2");
 
-  const t1 = parseScoreFromMerged(match.score, team1Name);
-  const t2 = parseScoreFromMerged(match.score, team2Name);
+  // If backend already sent strings, use them. Otherwise fallback to old parser.
+  const team1Score = match.team1Score || parseScoreFromMerged(match.score, team1Name).score;
+  const team2Score = match.team2Score || parseScoreFromMerged(match.score, team2Name).score;
+  const team1Overs = match.team1Overs || parseScoreFromMerged(match.score, team1Name).overs;
+  const team2Overs = match.team2Overs || parseScoreFromMerged(match.score, team2Name).overs;
 
   return {
     id: match.id || match.apiId || Math.random().toString(),
@@ -149,10 +157,10 @@ export function transformMergedMatch(match: MergedMatch): Match {
     team1,
     team2,
 
-    team1Score: t1.score,
-    team2Score: t2.score,
-    team1Overs: t1.overs,
-    team2Overs: t2.overs,
+    team1Score,
+    team2Score,
+    team1Overs,
+    team2Overs,
 
     status: match.status,
     statusText: match.statusText || "Match info unavailable",

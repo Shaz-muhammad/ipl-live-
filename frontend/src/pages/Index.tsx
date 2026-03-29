@@ -67,6 +67,7 @@ const Index = () => {
       setApiStatus(status);
 
       if (data.length > 0) {
+        console.log("MATCH DATA:", data);
         setCricMatches(data);
         setLastValidMatches(data);
       } else {
