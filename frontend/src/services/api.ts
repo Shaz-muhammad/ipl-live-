@@ -14,7 +14,7 @@ if (!API_BASE_URL) {
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 15000,
+  timeout: 30000,
   headers: {
     "Content-Type": "application/json",
   },
@@ -22,7 +22,7 @@ export const api = axios.create({
 
 export const adminApi = axios.create({
   baseURL: ADMIN_API_BASE_URL,
-  timeout: 15000,
+  timeout: 30000,
   headers: {
     "Content-Type": "application/json",
   },

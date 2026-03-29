@@ -33,6 +33,9 @@ export async function sendContactEmails({ name, email, subject, message }) {
       user: SMTP_USER,
       pass: SMTP_PASS,
     },
+    connectionTimeout: 10000, 
+    greetingTimeout: 10000, 
+    socketTimeout: 10000, 
   });
 
   try {
