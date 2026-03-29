@@ -73,11 +73,7 @@ router.post("/contact", async (req, res) => {
       console.error("❌ Support Email Error:", emailStatus.error);
       return res.status(502).json({ 
         success: false,
-        ok: false,
-        saved,
-        supportEmailSent: false,
-        confirmationEmailSent: false,
-        error: `Email delivery failed: ${emailStatus.error || "Unknown SMTP error"}`
+        error: `Email delivery failed: ${emailStatus.error || "Unknown error"}`
       });
     }
 
@@ -85,13 +81,7 @@ router.post("/contact", async (req, res) => {
     console.log("✨ Contact flow completed successfully.");
     res.status(201).json({ 
       success: true,
-      ok: true, 
-      saved,
-      supportEmailSent: true,
-      confirmationEmailSent: emailStatus.confirmationEmailSent,
-      message: emailStatus.confirmationEmailSent 
-        ? "Message delivered successfully! Confirmation email sent."
-        : "Message delivered successfully! (Confirmation email failed to send)"
+      message: "Message delivered successfully!"
     });
   } catch (err) {
     console.error("❌ Unexpected Controller Error:", err.message);

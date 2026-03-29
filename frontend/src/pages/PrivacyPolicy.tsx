@@ -107,7 +107,12 @@ const PrivacyPolicy = () => {
           <p className="text-xs text-muted-foreground font-body">
             Questions regarding our data practices? Reach out at: 
             <br />
-            <span className="text-primary font-bold cursor-pointer hover:underline mt-2 inline-block text-sm">privacy@ipl-live.tech</span>
+            <a 
+              href="mailto:ipl.live1003@gmail.com"
+              className="text-primary font-bold hover:underline mt-2 inline-block text-sm"
+            >
+              ipl.live1003@gmail.com
+            </a>
           </p>
         </section>
 
