@@ -28,7 +28,7 @@ const Index = () => {
     // Initial fetch
     const fetchMatches = async () => {
       try {
-        const response = await axios.get(`${API_BASE}/api/matches/live`);
+        const response = await axios.get(`${API_BASE}/live-scores`);
         const normalized = normalizeMatches(response.data);
         setMatches(normalized);
       } catch (error) {
@@ -47,7 +47,7 @@ const Index = () => {
       console.log("✅ Connected to socket (Index)");
     });
 
-    socket.on("matches:update", (data: any) => {
+    socket.on("liveScores", (data: any) => {
       console.log("MATCHES UPDATE (Index):", data);
       const normalized = normalizeMatches(data);
       setMatches(normalized);
