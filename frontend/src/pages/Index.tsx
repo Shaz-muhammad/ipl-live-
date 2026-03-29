@@ -2,10 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { Header } from "@/components/Header";
 import { HeroMatchCard } from "@/components/HeroMatchCard";
 import { MatchCard } from "@/components/MatchCard";
-import { SectionHeader } from "@/components/SectionHeader"; 
- import { BlogSection } from "@/components/BlogSection";
- import { Footer } from "@/components/Footer";
- import { WatchLiveModal } from "@/components/WatchLiveModal";
+import { SectionHeader } from "@/components/SectionHeader";
+import { BlogSection } from "@/components/BlogSection";
+import { Footer } from "@/components/Footer";
+import { WatchLiveModal } from "@/components/WatchLiveModal";
 import { AdminPanel } from "@/components/AdminPanel";
 import { useTeamTheme } from "@/hooks/useTeamTheme";
 import {
@@ -15,10 +15,14 @@ import {
 } from "@/lib/transformCricAPI";
 import { connectSocket } from "@/services/socket";
 
+type MatchWithState = Match & {
+  matchState?: string;
+};
+
 const Index = () => {
   const [showWatchLive, setShowWatchLive] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
-  const [selectedMatchIds, setSelectedMatchIds] = useState<string[]>([]);
+  const [, setSelectedMatchIds] = useState<string[]>([]);
 
   const { setTeamTheme, resetTheme } = useTeamTheme();
 
@@ -71,13 +75,17 @@ const Index = () => {
   }, []);
 
   const liveMatches = useMemo(
-    () => (matches || []).filter(
-      (m) =>
-        m?.status?.toLowerCase().includes("live") ||
-        (m as any)?.matchState === "live" ||
-        m?.team1Score ||
-        m?.team2Score
-    ),
+    () =>
+      (matches || []).filter((m) => {
+        const match = m as MatchWithState;
+
+        return (
+          match?.status?.toLowerCase().includes("live") ||
+          match?.matchState === "live" ||
+          Boolean(match?.team1Score) ||
+          Boolean(match?.team2Score)
+        );
+      }),
     [matches],
   );
 
@@ -150,15 +158,17 @@ const Index = () => {
               )}
             </section>
           </>
-        ) : !isLoading && (
-          <div className="text-center py-20 glass-card rounded-2xl border border-border/50">
-            <p className="text-lg font-heading font-bold text-muted-foreground">
-              No IPL live match currently
-            </p>
-            <p className="text-xs text-muted-foreground/60 mt-2">
-              Stay tuned for upcoming live action!
-            </p>
-          </div>
+        ) : (
+          !isLoading && (
+            <div className="text-center py-20 glass-card rounded-2xl border border-border/50">
+              <p className="text-lg font-heading font-bold text-muted-foreground">
+                No IPL live match currently
+              </p>
+              <p className="text-xs text-muted-foreground/60 mt-2">
+                Stay tuned for upcoming live action!
+              </p>
+            </div>
+          )
         )}
 
         <BlogSection />
