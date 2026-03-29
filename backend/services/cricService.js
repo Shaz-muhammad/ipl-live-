@@ -8,9 +8,11 @@ let cachedLiveMatches = [];
 let lastLiveFetch = 0;
 let isFetchingLive = false;
 let currentPollingMode = "standby"; // "standby" | "live"
+let blockedUntil = 0; // ⏳ Timestamp until which API calls are blocked
 
 const LIVE_POLL_INTERVAL = 60000; // 1 minute
 const STANDBY_POLL_INTERVAL = 1200000; // 20 minutes
+const BLOCK_DURATION = 1200000; // 20 minutes pause
 
 export function getPollInterval(hasLiveMatch) {
   return hasLiveMatch ? LIVE_POLL_INTERVAL : STANDBY_POLL_INTERVAL;
@@ -34,6 +36,15 @@ function getCricKey() {
 } 
 
 async function fetchCric(endpoint, params = {}) { 
+  const now = Date.now();
+
+  // 1. Check if we are currently in a blocked period
+  if (now < blockedUntil) {
+    const minutesLeft = Math.ceil((blockedUntil - now) / 60000);
+    console.log(`⏳ CricAPI is currently blocked. Resuming in ${minutesLeft} minutes.`);
+    return null;
+  }
+
   const apikey = getCricKey(); 
   const url = `${CRICAPI_BASE}/${endpoint}`; 
 
@@ -43,15 +54,33 @@ async function fetchCric(endpoint, params = {}) {
       timeout: Number(process.env.CRICAPI_TIMEOUT_MS ?? 15000), 
     }); 
     
-    // Handle API failures or blocked status
-    if (response.data?.status === "failure" || response.data?.error || response.data?.info === "blocked") {
-      console.error(`❌ CricAPI Failure (${endpoint}):`, response.data?.reason || response.data?.error || response.data?.info || "Unknown reason");
+    const data = response.data;
+
+    // Detect if API is blocked or rate-limited
+    const isBlocked = 
+      data?.status === "failure" || 
+      data?.error || 
+      data?.info === "blocked" ||
+      (typeof data?.reason === "string" && data.reason.toLowerCase().includes("blocked")) ||
+      (typeof data?.reason === "string" && data.reason.toLowerCase().includes("limit"));
+
+    if (isBlocked) {
+      blockedUntil = now + BLOCK_DURATION;
+      console.error(`❌ CricAPI Blocked/Rate-limited (${endpoint}). Pausing all calls for 20 minutes.`);
+      console.error(`Reason: ${data?.reason || data?.error || data?.info || "Unknown"}`);
       return null;
     }
     
-    return response.data; 
+    return data; 
   } catch (err) { 
     console.error(`❌ CricAPI error (${endpoint}):`, err.message); 
+    
+    // If it's a 429 or other rate-limit related error, trigger block
+    if (err.response?.status === 429) {
+      blockedUntil = now + BLOCK_DURATION;
+      console.error("❌ Received 429 Too Many Requests. Pausing for 20 minutes.");
+    }
+    
     return null; 
   } 
 } 
@@ -75,6 +104,16 @@ export async function fetchCurrentMatches(force = false) {
   if (!force && (now - lastLiveFetch < minInterval) && cachedLiveMatches.length > 0) {
     console.log("Returning cached data");
     return { data: cachedLiveMatches, fromCache: true };
+  }
+
+  // 3. Check if we are currently blocked
+  if (now < blockedUntil) {
+    if (cachedLiveMatches.length > 0) {
+      console.log("Returning cached data (API Blocked)");
+      return { data: cachedLiveMatches, fromCache: true };
+    }
+    console.log("No cache available (API Blocked)");
+    return { data: [], fromCache: true };
   }
 
   isFetchingLive = true;
@@ -155,9 +194,20 @@ export function isMatchLive(match) {
    const now = Date.now();
    const cached = matchDetailsCache.get(matchId);
    
+   // 1. If we have a cache and it's fresh, use it
    if (cached && (now - cached.timestamp < MATCH_DETAIL_CACHE_TTL)) {
      console.log(`🛡️ Returning cached details for match ${matchId}`);
      return cached.data;
+   }
+
+   // 2. If we are currently blocked by CricAPI, return the cache even if expired
+   if (now < blockedUntil) {
+     if (cached) {
+       console.log(`⏳ API Blocked: Returning last cached details for match ${matchId}`);
+       return cached.data;
+     }
+     console.log(`⏳ API Blocked: No cache available for match ${matchId}`);
+     return null;
    }
 
    const [matchInfoRes, matchScorecardRes] = await Promise.allSettled([ 
