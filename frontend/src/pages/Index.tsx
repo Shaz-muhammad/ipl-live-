@@ -52,7 +52,7 @@ const Index = () => {
     });
 
     const onLiveScores = (response: LiveScoreResponse | MergedMatch[]) => {
-      console.log("🔥 Live data received:", response);
+      console.log("SOCKET PAYLOAD:", response);
 
       let status: ApiStatus = "live";
       let data: MergedMatch[] = [];
@@ -67,12 +67,10 @@ const Index = () => {
       setApiStatus(status);
 
       if (data.length > 0) {
-        console.log("MATCH DATA:", data);
         setCricMatches(data);
         setLastValidMatches(data);
       } else {
         console.log("⚠️ Empty response data");
-        // Only clear matches if we don't have a valid cache to show
         if (lastValidMatches.length === 0) {
           setCricMatches([]);
         }
@@ -99,27 +97,28 @@ const Index = () => {
     };
   }, []);
 
-  const liveMatches = useMemo(
-    () =>
-      (matches || []).filter((m) => {
-        const match = m as MatchWithState;
-        const status = match?.status?.toLowerCase() || "";
-        const state = match?.matchState?.toLowerCase() || "";
+  const liveMatches = useMemo(() => {
+    const live = (matches || []).filter((m) => {
+      const match = m as MatchWithState;
+      const status = match?.status?.toLowerCase() || "";
+      const state = match?.matchState?.toLowerCase() || "";
 
-        return (
-          state === "live" ||
-          state === "in progress" ||
-          state === "inprogress" ||
-          status.includes("live") ||
-          status.includes("need") ||
-          status.includes("opt to bat") ||
-          status.includes("won toss") ||
-          Boolean(match?.team1Score) ||
-          Boolean(match?.team2Score)
-        );
-      }),
-    [matches],
-  );
+      return (
+        state === "live" ||
+        state === "in progress" ||
+        state === "inprogress" ||
+        status.includes("live") ||
+        status.includes("need") ||
+        status.includes("opt to bat") ||
+        status.includes("won toss") ||
+        Boolean(match?.team1Score) ||
+        Boolean(match?.team2Score)
+      );
+    });
+    console.log("MATCHES STATE:", matches);
+    console.log("LIVE MATCHES:", live);
+    return live;
+  }, [matches]);
 
   const heroMatch = liveMatches[0];
 
