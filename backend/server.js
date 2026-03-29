@@ -265,14 +265,14 @@ async function start() {
 
     async function pollAndEmit() {
       try {
-        const liveData = await fetchScores();
-        const liveMatches = Array.isArray(liveData?.data) ? liveData.data : [];
+        const payload = await fetchScores();
+        const liveMatches = Array.isArray(payload?.data) ? payload.data : [];
 
         const schedule = await getIplSchedule();
         const mergedMatches = mergeScheduleWithLive(schedule, liveMatches);
 
         latestMatches = mergedMatches;
-        const apiStatus = getApiStatus(mergedMatches);
+        const apiStatus = payload.apiStatus || getApiStatus(mergedMatches);
 
         // Emit to all clients
         io.emit("liveScores", { apiStatus, data: latestMatches });
@@ -285,7 +285,6 @@ async function start() {
         setCurrentPollingMode(mode);
 
         if (nextInterval !== currentPollingInterval || !pollTimer) {
-          console.log(`Polling mode: ${mode}`);
           currentPollingInterval = nextInterval;
           
           if (pollTimer) clearInterval(pollTimer);
@@ -300,7 +299,7 @@ async function start() {
     }
 
     io.on("connection", (socket) => {
-      console.log("⚡ [SOCKET] Client connected:", socket.id);
+      console.log("⚡ [SOCKET] Socket connected:", socket.id);
       // On connection, send cached data only. Do NOT trigger fetch per user.
       const apiStatus = getApiStatus(latestMatches);
       socket.emit("liveScores", { apiStatus, data: latestMatches });
@@ -312,6 +311,9 @@ async function start() {
 
     // Initial fetch after short delay
     setTimeout(() => pollAndEmit(), 1000);
+
+    // One global scheduler only - managed by pollAndEmit's interval logic
+    // No redundant setInterval here as it's handled by currentPollingInterval logic above
 
     server.listen(PORT, () => {
       console.log(`🚀 Backend running on http://localhost:${PORT}`);
