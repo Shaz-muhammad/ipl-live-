@@ -99,45 +99,48 @@ import axios from "axios";
  function isLiveMatch(match) { 
    const info = match?.matchInfo; 
    const score = match?.matchScore; 
-  
+   const state = info?.state?.toLowerCase?.() || ""; 
+   const stateTitle = info?.stateTitle?.toLowerCase?.() || ""; 
+   const status = info?.status?.toLowerCase?.() || ""; 
+ 
    return Boolean( 
-     info && 
-     ( 
-       info?.state?.toLowerCase?.() === "live" || 
-       info?.state?.toLowerCase?.() === "inprogress" || 
-       info?.status?.toLowerCase?.().includes("opt to bat") || 
-       info?.status?.toLowerCase?.().includes("need") || 
-       info?.status?.toLowerCase?.().includes("trail") || 
-       score 
-     ) 
+     state === "in progress" || 
+     state === "live" ||
+     stateTitle === "in progress" || 
+     status.includes("need") || 
+     status.includes("opt to bat") || 
+     status.includes("won toss") || 
+     score?.team1Score?.inngs1 || 
+     score?.team2Score?.inngs1 
    ); 
  } 
  
  function normalizeMatch(match) { 
    const info = match?.matchInfo || {}; 
    const score = match?.matchScore || {}; 
-   const team1Score = score?.team1Score?.inngs1; 
-   const team2Score = score?.team2Score?.inngs1; 
-  
+ 
+   const team1Innings = score?.team1Score?.inngs1; 
+   const team2Innings = score?.team2Score?.inngs1; 
+ 
    return { 
      id: String(info?.matchId || ""), 
      team1: info?.team1?.teamName || "Team 1", 
      team2: info?.team2?.teamName || "Team 2", 
-     team1Logo: info?.team1?.imageId || "", 
-     team2Logo: info?.team2?.imageId || "", 
+     team1Short: info?.team1?.teamSName || "", 
+     team2Short: info?.team2?.teamSName || "", 
+     team1Logo: String(info?.team1?.imageId || ""), 
+     team2Logo: String(info?.team2?.imageId || ""), 
      status: info?.status || "", 
      venue: info?.venueInfo?.ground || "", 
      matchState: info?.state || "", 
-     team1Score: team1Score 
-       ? `${team1Score.runs || 0}/${team1Score.wickets || 0}` 
+     team1Score: team1Innings 
+       ? `${team1Innings.runs || 0}/${team1Innings.wickets || 0}` 
        : "", 
-     team2Score: team2Score 
-       ? `${team2Score.runs || 0}/${team2Score.wickets || 0}` 
+     team2Score: team2Innings 
+       ? `${team2Innings.runs || 0}/${team2Innings.wickets || 0}` 
        : "", 
-     team1Overs: team1Score?.overs ? String(team1Score.overs) : "", 
-     team2Overs: team2Score?.overs ? String(team2Score.overs) : "", 
-     tossWinner: "", 
-     tossChoice: "", 
+     team1Overs: team1Innings?.overs ? String(team1Innings.overs) : "", 
+     team2Overs: team2Innings?.overs ? String(team2Innings.overs) : "", 
      result: info?.status || "", 
      commentary: [], 
    }; 
@@ -180,8 +183,18 @@ import axios from "axios";
   
      const apiResponse = await fetchRapidLiveMatches(); 
      const allMatches = extractMatches(apiResponse); 
+     console.log(`Total matches extracted: ${allMatches.length}`);
+
      const iplMatches = allMatches.filter(isIPLMatch); 
+     console.log(`IPL matches found: ${iplMatches.length}`);
+
      const liveIPLMatches = iplMatches.filter(isLiveMatch); 
+     console.log(`Live IPL matches found: ${liveIPLMatches.length}`);
+
+     liveIPLMatches.forEach(m => {
+       console.log(`Live IPL: ${m.matchInfo?.team1?.teamName} vs ${m.matchInfo?.team2?.teamName} | ${m.matchInfo?.state} | ${m.matchInfo?.status}`);
+     });
+
      const normalized = liveIPLMatches.map(normalizeMatch); 
   
      lastFetchTime = now; 

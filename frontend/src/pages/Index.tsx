@@ -103,10 +103,17 @@ const Index = () => {
     () =>
       (matches || []).filter((m) => {
         const match = m as MatchWithState;
+        const status = match?.status?.toLowerCase() || "";
+        const state = match?.matchState?.toLowerCase() || "";
 
         return (
-          match?.matchState === "live" ||
-          match?.status?.toLowerCase().includes("live") ||
+          state === "live" ||
+          state === "in progress" ||
+          state === "inprogress" ||
+          status.includes("live") ||
+          status.includes("need") ||
+          status.includes("opt to bat") ||
+          status.includes("won toss") ||
           Boolean(match?.team1Score) ||
           Boolean(match?.team2Score)
         );

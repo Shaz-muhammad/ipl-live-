@@ -50,6 +50,8 @@ export interface MergedMatch {
   teams?: string[];
   homeTeam?: string;
   awayTeam?: string;
+  team1Logo?: string;
+  team2Logo?: string;
   score?: ScoreEntry[];
   team1Score?: string;
   team2Score?: string;
@@ -102,12 +104,12 @@ function getRandomColor(seed: string): string {
 }
 
 // 🧠 TEAM
-function createTeam(name: string): Team {
+function createTeam(name: string, logo?: string): Team {
   return {
     id: name.toLowerCase().replace(/\s+/g, "-"),
     name,
     shortName: name.substring(0, 3).toUpperCase(),
-    logo: "🏏",
+    logo: logo || "🏏",
     primaryColor: getRandomColor(name),
     secondaryColor: "0 0% 20%",
   };
@@ -142,8 +144,14 @@ export function transformMergedMatch(match: MergedMatch): Match {
   const team1Name = match.team1 || match.teams?.[0] || match.homeTeam || "Team 1";
   const team2Name = match.team2 || match.teams?.[1] || match.awayTeam || "Team 2";
 
-  const team1 = createTeam(typeof team1Name === 'string' ? team1Name : "Team 1");
-  const team2 = createTeam(typeof team2Name === 'string' ? team2Name : "Team 2");
+  const team1 = createTeam(
+    typeof team1Name === 'string' ? team1Name : "Team 1",
+    match.team1Logo
+  );
+  const team2 = createTeam(
+    typeof team2Name === 'string' ? team2Name : "Team 2",
+    match.team2Logo
+  );
 
   // If backend already sent strings, use them. Otherwise fallback to old parser.
   const team1Score = match.team1Score || parseScoreFromMerged(match.score, team1Name).score;
