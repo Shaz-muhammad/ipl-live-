@@ -15,7 +15,7 @@ import { Match } from "@/types/match";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
-const Index = () => {
+const HomePage = () => {
   const [showWatchLive, setShowWatchLive] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
   const [matches, setMatches] = useState<Match[]>([]);
@@ -44,11 +44,11 @@ const Index = () => {
     const socket = io(API_BASE);
     
     socket.on("connect", () => {
-      console.log("✅ Connected to socket (Index)");
+      console.log("✅ Connected to socket");
     });
 
     socket.on("matches:update", (data: any) => {
-      console.log("MATCHES UPDATE (Index):", data);
+      console.log("MATCHES UPDATE:", data);
       const normalized = normalizeMatches(data);
       setMatches(normalized);
     });
@@ -60,6 +60,10 @@ const Index = () => {
 
   const liveMatches = useMemo(() => matches.filter(isLiveLike), [matches]);
   
+  const visibleMatches = useMemo(() => {
+    return matches;
+  }, [matches]);
+
   const selectedMatch = useMemo(() => {
     return matches.find(m => m.id === selectedMatchId);
   }, [matches, selectedMatchId]);
@@ -164,4 +168,4 @@ const Index = () => {
   );
 };
 
-export default Index;
+export default HomePage;

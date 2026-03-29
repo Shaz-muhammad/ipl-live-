@@ -1,7 +1,13 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { LiveBadge } from "./LiveBadge";
-import type { Match } from "@/types/match";
+import type { Match } from "../types/match";
+import { 
+  getTeamLabel, 
+  safeText, 
+  formatOvers, 
+  isLiveLike 
+} from "../utils/matchHelpers";
 
 interface Props {
   match: Match;
@@ -13,33 +19,21 @@ export function HeroMatchCard({ match, onTeamClick }: Props) {
 
   if (!match) return null;
 
-  const state = match.matchState?.toLowerCase() || "";
-  const status = match.status?.toLowerCase() || "";
-
-  const isLive =
-    state.includes("progress") ||
-    status.includes("need") ||
-    status.includes("opt") ||
-    status.includes("won toss") ||
-    Boolean(match.team1Score) ||
-    Boolean(match.team2Score);
-
-  const isFinished =
-    state === "complete" ||
-    state === "completed" ||
-    status.includes("won by");
+  const isLive = isLiveLike(match);
+  const state = (match.matchState || "").toLowerCase();
+  const isFinished = state === "complete" || state === "completed" || (match.status || "").toLowerCase().includes("won by");
 
   const displayStatus = isLive ? "live" : isFinished ? "finished" : "upcoming";
 
-  const team1DisplayName = String(match.team1Short || match.team1 || "Team 1");
-  const team2DisplayName = String(match.team2Short || match.team2 || "Team 2");
+  const team1DisplayName = getTeamLabel(match.team1Short, match.team1);
+  const team2DisplayName = getTeamLabel(match.team2Short, match.team2);
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      onClick={() => navigate(`/match/${match.apiId || match.id}`)}
+      onClick={() => navigate(`/match/${match.id}`)}
       className="glass-card neon-border cursor-pointer p-5 md:p-6 max-w-2xl mx-auto overflow-hidden relative"
     >
       <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl rounded-full -mr-16 -mt-16 pointer-events-none" />
@@ -57,7 +51,7 @@ export function HeroMatchCard({ match, onTeamClick }: Props) {
           )}
         </div>
         <div className="text-[10px] md:text-xs text-muted-foreground font-medium truncate ml-4">
-          {match.venue || "Unknown venue"} {match.date ? ` • ${match.date}` : ""}
+          {safeText(match.venue, "Unknown venue")}
         </div>
       </div>
 
@@ -74,16 +68,16 @@ export function HeroMatchCard({ match, onTeamClick }: Props) {
               {match.team1Logo || "🏏"}
             </span>
             <span className="font-heading text-xs font-bold text-muted-foreground uppercase tracking-tighter">
-              {(match.team1Short || match.team1 || "").substring(0, 3)}
+              {match.team1Short || team1DisplayName.substring(0, 3).toUpperCase()}
             </span>
           </div>
           <div className="flex flex-col">
             <span className="font-display text-xl md:text-3xl font-bold text-foreground leading-none">
-              {match.team1Score || "—"}
+              {safeText(match.team1Score, "—")}
             </span>
             {match.team1Overs && (
               <span className="text-[10px] md:text-xs text-muted-foreground font-medium mt-1">
-                ({match.team1Overs} ov)
+                ({formatOvers(match.team1Overs)})
               </span>
             )}
           </div>
@@ -106,11 +100,11 @@ export function HeroMatchCard({ match, onTeamClick }: Props) {
         >
           <div className="flex flex-col items-end">
             <span className="font-display text-xl md:text-3xl font-bold text-foreground leading-none">
-              {match.team2Score || "—"}
+              {safeText(match.team2Score, "—")}
             </span>
             {match.team2Overs && (
               <span className="text-[10px] md:text-xs text-muted-foreground font-medium mt-1">
-                ({match.team2Overs} ov)
+                ({formatOvers(match.team2Overs)})
               </span>
             )}
           </div>
@@ -119,7 +113,7 @@ export function HeroMatchCard({ match, onTeamClick }: Props) {
               {match.team2Logo || "🏏"}
             </span>
             <span className="font-heading text-xs font-bold text-muted-foreground uppercase tracking-tighter">
-              {(match.team2Short || match.team2 || "").substring(0, 3)}
+              {match.team2Short || team2DisplayName.substring(0, 3).toUpperCase()}
             </span>
           </div>
         </div>
@@ -129,37 +123,8 @@ export function HeroMatchCard({ match, onTeamClick }: Props) {
         <p className={`text-sm md:text-base font-heading font-bold text-center ${
           displayStatus === "live" ? "neon-text-accent animate-pulse" : "text-foreground"
         }`}>
-          {displayStatus === "upcoming" 
-            ? `Starts at ${match.time || "TBD"}` 
-            : (match.result || match.status || "Match info unavailable")}
+          {match.status || "Match info unavailable"}
         </p>
-
-        <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-[10px] md:text-xs text-muted-foreground font-medium">
-          {match.tossWinner && match.tossChoice && (
-            <span className="flex items-center gap-1">
-              <span className="w-1 h-1 rounded-full bg-primary/40" />
-              {match.tossWinner} elected to {match.tossChoice}
-            </span>
-          )}
-          {match.target && match.target > 0 && (
-            <span className="flex items-center gap-1 text-neon-blue font-bold">
-              <span className="w-1 h-1 rounded-full bg-neon-blue" />
-              Target: {match.target}
-            </span>
-          )}
-          {match.rrr && match.rrr !== "0" && (
-            <span className="flex items-center gap-1 text-neon-red font-bold">
-              <span className="w-1 h-1 rounded-full bg-neon-red" />
-              RRR: {match.rrr}
-            </span>
-          )}
-          {match.currentInnings && (
-            <span className="flex items-center gap-1">
-              <span className="w-1 h-1 rounded-full bg-primary/40" />
-              {match.currentInnings}
-            </span>
-          )}
-        </div>
       </div>
     </motion.div>
   );

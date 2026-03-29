@@ -8,7 +8,12 @@ import { Scorecard } from "@/components/Scorecard";
 import { Commentary } from "@/components/Commentary";
 import { Footer } from "@/components/Footer";
 import { api } from "@/services/api";
-import type { Match } from "@/types/match";
+import { 
+  getTeamLabel, 
+  safeText, 
+  formatOvers, 
+  normalizeMatch 
+} from "@/utils/matchHelpers";
 
 type Tab = "summary" | "scorecard" | "commentary" | "info";
 
@@ -18,7 +23,7 @@ const MatchDetails = () => {
   const [activeTab, setActiveTab] = useState<Tab>("summary");
 
   const {
-    data: match,
+    data: rawMatch,
     isLoading,
     isError,
   } = useQuery({
@@ -31,6 +36,8 @@ const MatchDetails = () => {
     retry: 1,
     refetchInterval: 15000,
   });
+
+  const match = rawMatch ? normalizeMatch(rawMatch) : null;
 
   // 🚫 NO MOCK DATA FALLBACK
   if (isLoading) {
@@ -76,7 +83,7 @@ const MatchDetails = () => {
           </button>
 
           <h1 className="font-heading text-sm font-bold text-foreground truncate">
-            {match.team1Short || match.team1} vs {match.team2Short || match.team2}
+            {getTeamLabel(match.team1Short, match.team1)} vs {getTeamLabel(match.team2Short, match.team2)}
           </h1>
 
           <div className="ml-auto flex items-center gap-2">
@@ -96,13 +103,13 @@ const MatchDetails = () => {
             <div className="flex flex-col items-center gap-2">
               <span className="text-4xl filter drop-shadow-neon-sm">{match.team1Logo || "🏏"}</span>
               <p className="font-heading font-bold text-foreground text-sm uppercase">
-                {match.team1Short || match.team1}
+                {getTeamLabel(match.team1Short, match.team1)}
               </p>
               <p className="font-display text-xl md:text-2xl neon-text font-bold leading-none">
-                {match.team1Score || "—"}
+                {safeText(match.team1Score, "—")}
               </p>
               {match.team1Overs && (
-                <p className="text-[10px] text-muted-foreground">({match.team1Overs} ov)</p>
+                <p className="text-[10px] text-muted-foreground">({formatOvers(match.team1Overs)})</p>
               )}
             </div>
 
@@ -111,13 +118,13 @@ const MatchDetails = () => {
             <div className="flex flex-col items-center gap-2">
               <span className="text-4xl filter drop-shadow-neon-sm">{match.team2Logo || "🏏"}</span>
               <p className="font-heading font-bold text-foreground text-sm uppercase">
-                {match.team2Short || match.team2}
+                {getTeamLabel(match.team2Short, match.team2)}
               </p>
               <p className="font-display text-xl md:text-2xl neon-text font-bold leading-none">
-                {match.team2Score || "—"}
+                {safeText(match.team2Score, "—")}
               </p>
               {match.team2Overs && (
-                <p className="text-[10px] text-muted-foreground">({match.team2Overs} ov)</p>
+                <p className="text-[10px] text-muted-foreground">({formatOvers(match.team2Overs)})</p>
               )}
             </div>
           </div>
@@ -161,10 +168,10 @@ const MatchDetails = () => {
                   {match.tossWinner && (
                     <p className="text-foreground"><span className="text-muted-foreground">Toss:</span> {match.tossWinner} elected to {match.tossChoice}</p>
                   )}
-                  {match.target > 0 && (
+                  {match.target && match.target > 0 && (
                     <p className="text-neon-blue font-bold"><span className="text-muted-foreground">Target:</span> {match.target} runs</p>
                   )}
-                  {match.rrr && (
+                  {match.rrr && match.rrr !== "0" && (
                     <p className="text-neon-red font-bold"><span className="text-muted-foreground">Req. Run Rate:</span> {match.rrr}</p>
                   )}
                   {match.currentInnings && (
@@ -181,7 +188,7 @@ const MatchDetails = () => {
           )}
 
           {activeTab === "commentary" && (
-            <Commentary entries={match.commentary} />
+            <Commentary entries={match.commentary || []} />
           )}
 
           {activeTab === "info" && (
