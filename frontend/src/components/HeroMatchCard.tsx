@@ -1,14 +1,35 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { LiveBadge } from "./LiveBadge";
-import { TeamLogo } from "./TeamLogo";
-import type { Match } from "../types/match";
-import { 
-  getTeamLabel, 
-  safeText, 
-  formatOvers, 
-  isLiveLike 
-} from "../utils/matchHelpers";
+
+export type Match = { 
+  id: string; 
+  apiId?: string; 
+  team1: string; 
+  team2: string; 
+  team1Short?: string; 
+  team2Short?: string; 
+  team1Logo?: string; 
+  team2Logo?: string; 
+  team1Score?: string; 
+  team2Score?: string; 
+  team1Overs?: string; 
+  team2Overs?: string; 
+  status?: string; 
+  matchState?: string; 
+  tossWinner?: string; 
+  tossChoice?: string; 
+  result?: string; 
+  target?: number; 
+  rrr?: string; 
+  currentInnings?: string; 
+  venue?: string; 
+  date?: string; 
+  time?: string; 
+  commentary?: any[];
+  batting?: any[];
+  bowling?: any[];
+}; 
 
 interface Props {
   match: Match;
@@ -20,14 +41,13 @@ export function HeroMatchCard({ match, onTeamClick }: Props) {
 
   if (!match) return null;
 
-  const isLive = isLiveLike(match);
-  const state = (match.matchState || "").toLowerCase();
-  const isFinished = state === "complete" || state === "completed" || (match.status || "").toLowerCase().includes("won by");
+  const isLive = (match.matchState || "").toLowerCase() === "in progress" || (match.status || "").toLowerCase().includes("need");
+  const isFinished = (match.matchState || "").toLowerCase() === "complete" || (match.status || "").toLowerCase().includes("won by");
 
   const displayStatus = isLive ? "live" : isFinished ? "finished" : "upcoming";
 
-  const team1DisplayName = getTeamLabel(match.team1Short, match.team1);
-  const team2DisplayName = getTeamLabel(match.team2Short, match.team2);
+  const team1DisplayName = match.team1Short || match.team1 || "Team 1";
+  const team2DisplayName = match.team2Short || match.team2 || "Team 2";
 
   return (
     <motion.div
@@ -52,7 +72,7 @@ export function HeroMatchCard({ match, onTeamClick }: Props) {
           )}
         </div>
         <div className="text-[10px] md:text-xs text-muted-foreground font-medium truncate ml-4">
-          {safeText(match.venue, "Unknown venue")}
+          {match.venue || "Unknown venue"}
         </div>
       </div>
 
@@ -65,22 +85,20 @@ export function HeroMatchCard({ match, onTeamClick }: Props) {
           }}
         >
           <div className="flex flex-col items-center gap-1">
-             <TeamLogo 
-               logo={match.team1Logo} 
-               name={team1DisplayName} 
-               className="text-3xl md:text-4xl h-12 w-12 md:h-16 md:w-16 filter drop-shadow-neon-sm group-hover:scale-110 transition-transform"
-             />
+             <span className="text-3xl md:text-4xl filter drop-shadow-neon-sm group-hover:scale-110 transition-transform">
+              {match.team1Logo || "🏏"}
+            </span>
             <span className="font-heading text-xs font-bold text-muted-foreground uppercase tracking-tighter">
-              {match.team1Short || team1DisplayName.substring(0, 3).toUpperCase()}
+              {team1DisplayName.substring(0, 3)}
             </span>
           </div>
           <div className="flex flex-col">
             <span className="font-display text-xl md:text-3xl font-bold text-foreground leading-none">
-              {safeText(match.team1Score, "—")}
+              {match.team1Score || "—"}
             </span>
             {match.team1Overs && (
               <span className="text-[10px] md:text-xs text-muted-foreground font-medium mt-1">
-                ({formatOvers(match.team1Overs)})
+                ({match.team1Overs} ov)
               </span>
             )}
           </div>
@@ -103,22 +121,20 @@ export function HeroMatchCard({ match, onTeamClick }: Props) {
         >
           <div className="flex flex-col items-end">
             <span className="font-display text-xl md:text-3xl font-bold text-foreground leading-none">
-              {safeText(match.team2Score, "—")}
+              {match.team2Score || "—"}
             </span>
             {match.team2Overs && (
               <span className="text-[10px] md:text-xs text-muted-foreground font-medium mt-1">
-                ({formatOvers(match.team2Overs)})
+                ({match.team2Overs} ov)
               </span>
             )}
           </div>
           <div className="flex flex-col items-center gap-1">
-            <TeamLogo 
-              logo={match.team2Logo} 
-              name={team2DisplayName} 
-              className="text-3xl md:text-4xl h-12 w-12 md:h-16 md:w-16 filter drop-shadow-neon-sm group-hover:scale-110 transition-transform"
-            />
+            <span className="text-3xl md:text-4xl filter drop-shadow-neon-sm group-hover:scale-110 transition-transform">
+              {match.team2Logo || "🏏"}
+            </span>
             <span className="font-heading text-xs font-bold text-muted-foreground uppercase tracking-tighter">
-              {match.team2Short || team2DisplayName.substring(0, 3).toUpperCase()}
+              {team2DisplayName.substring(0, 3)}
             </span>
           </div>
         </div>

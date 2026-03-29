@@ -4,17 +4,39 @@ import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { LiveBadge } from "@/components/LiveBadge";
-import { TeamLogo } from "@/components/TeamLogo";
 import { Scorecard } from "@/components/Scorecard";
 import { Commentary } from "@/components/Commentary";
 import { Footer } from "@/components/Footer";
 import { api } from "@/services/api";
-import { 
-  getTeamLabel, 
-  safeText, 
-  formatOvers, 
-  normalizeMatch 
-} from "@/utils/matchHelpers";
+
+export type Match = { 
+  id: string; 
+  apiId?: string; 
+  team1: string; 
+  team2: string; 
+  team1Short?: string; 
+  team2Short?: string; 
+  team1Logo?: string; 
+  team2Logo?: string; 
+  team1Score?: string; 
+  team2Score?: string; 
+  team1Overs?: string; 
+  team2Overs?: string; 
+  status?: string; 
+  matchState?: string; 
+  tossWinner?: string; 
+  tossChoice?: string; 
+  result?: string; 
+  target?: number; 
+  rrr?: string; 
+  currentInnings?: string; 
+  venue?: string; 
+  date?: string; 
+  time?: string; 
+  commentary?: any[];
+  batting?: any[];
+  bowling?: any[];
+}; 
 
 type Tab = "summary" | "scorecard" | "commentary" | "info";
 
@@ -24,10 +46,10 @@ const MatchDetails = () => {
   const [activeTab, setActiveTab] = useState<Tab>("summary");
 
   const {
-    data: rawMatch,
+    data: match,
     isLoading,
     isError,
-  } = useQuery({
+  } = useQuery<Match>({
     queryKey: ["match", id],
     enabled: !!id,
     queryFn: async () => {
@@ -38,9 +60,6 @@ const MatchDetails = () => {
     refetchInterval: 15000,
   });
 
-  const match = rawMatch ? normalizeMatch(rawMatch) : null;
-
-  // 🚫 NO MOCK DATA FALLBACK
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -57,9 +76,7 @@ const MatchDetails = () => {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <p className="text-2xl mb-4">⚠️</p>
-          <p className="text-muted-foreground">
-            Match data unavailable (Backend/API issue)
-          </p>
+          <p className="text-muted-foreground">Match data unavailable</p>
           <button
             onClick={() => navigate("/")}
             className="mt-4 text-primary text-sm hover:underline"
@@ -84,17 +101,17 @@ const MatchDetails = () => {
           </button>
 
           <h1 className="font-heading text-sm font-bold text-foreground truncate">
-            {getTeamLabel(match.team1Short, match.team1)} vs {getTeamLabel(match.team2Short, match.team2)}
+            {match.team1Short || match.team1} vs {match.team2Short || match.team2}
           </h1>
 
           <div className="ml-auto flex items-center gap-2">
-            {match.status === "live" && <LiveBadge />}
+            {(match.matchState || "").toLowerCase() === "in progress" && <LiveBadge />}
           </div>
         </div>
       </div>
 
       <main className="container mx-auto px-4 py-6 space-y-6">
-        {/* Score Summary Card (Cricbuzz Hero Style) */}
+        {/* Score Summary Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -102,38 +119,30 @@ const MatchDetails = () => {
         >
           <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4 md:gap-8 mb-6">
             <div className="flex flex-col items-center gap-2">
-              <TeamLogo 
-                logo={match.team1Logo} 
-                name={getTeamLabel(match.team1Short, match.team1)} 
-                className="text-4xl h-16 w-16 filter drop-shadow-neon-sm"
-              />
+              <span className="text-4xl filter drop-shadow-neon-sm">{match.team1Logo || "🏏"}</span>
               <p className="font-heading font-bold text-foreground text-sm uppercase">
-                {getTeamLabel(match.team1Short, match.team1)}
+                {match.team1Short || match.team1}
               </p>
               <p className="font-display text-xl md:text-2xl neon-text font-bold leading-none">
-                {safeText(match.team1Score, "—")}
+                {match.team1Score || "—"}
               </p>
               {match.team1Overs && (
-                <p className="text-[10px] text-muted-foreground">({formatOvers(match.team1Overs)})</p>
+                <p className="text-[10px] text-muted-foreground">({match.team1Overs} ov)</p>
               )}
             </div>
 
             <div className="font-display text-[10px] text-muted-foreground/50 font-bold">VS</div>
 
             <div className="flex flex-col items-center gap-2">
-              <TeamLogo 
-                logo={match.team2Logo} 
-                name={getTeamLabel(match.team2Short, match.team2)} 
-                className="text-4xl h-16 w-16 filter drop-shadow-neon-sm"
-              />
+              <span className="text-4xl filter drop-shadow-neon-sm">{match.team2Logo || "🏏"}</span>
               <p className="font-heading font-bold text-foreground text-sm uppercase">
-                {getTeamLabel(match.team2Short, match.team2)}
+                {match.team2Short || match.team2}
               </p>
               <p className="font-display text-xl md:text-2xl neon-text font-bold leading-none">
-                {safeText(match.team2Score, "—")}
+                {match.team2Score || "—"}
               </p>
               {match.team2Overs && (
-                <p className="text-[10px] text-muted-foreground">({formatOvers(match.team2Overs)})</p>
+                <p className="text-[10px] text-muted-foreground">({match.team2Overs} ov)</p>
               )}
             </div>
           </div>
@@ -150,7 +159,7 @@ const MatchDetails = () => {
           </div>
         </motion.div>
 
-        {/* Tabs (Cricbuzz Style) */}
+        {/* Tabs */}
         <div className="flex gap-1 border-b border-border/30 overflow-x-auto no-scrollbar">
           {(["summary", "scorecard", "commentary", "info"] as Tab[]).map((tab) => (
             <button
@@ -177,10 +186,10 @@ const MatchDetails = () => {
                   {match.tossWinner && (
                     <p className="text-foreground"><span className="text-muted-foreground">Toss:</span> {match.tossWinner} elected to {match.tossChoice}</p>
                   )}
-                  {match.target && match.target > 0 && (
+                  {match.target && (
                     <p className="text-neon-blue font-bold"><span className="text-muted-foreground">Target:</span> {match.target} runs</p>
                   )}
-                  {match.rrr && match.rrr !== "0" && (
+                  {match.rrr && (
                     <p className="text-neon-red font-bold"><span className="text-muted-foreground">Req. Run Rate:</span> {match.rrr}</p>
                   )}
                   {match.currentInnings && (

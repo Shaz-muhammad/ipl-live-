@@ -10,8 +10,37 @@ import { Footer } from "@/components/Footer";
 import { WatchLiveModal } from "@/components/WatchLiveModal";
 import { AdminPanel } from "@/components/AdminPanel";
 import { useTeamTheme } from "@/hooks/useTeamTheme";
-import { normalizeMatches, isLiveLike } from "@/utils/matchHelpers";
-import { Match } from "@/types/match";
+
+export type Match = { 
+  id: string; 
+  apiId?: string; 
+  team1: string; 
+  team2: string; 
+  team1Short?: string; 
+  team2Short?: string; 
+  team1Logo?: string; 
+  team2Logo?: string; 
+  team1Score?: string; 
+  team2Score?: string; 
+  team1Overs?: string; 
+  team2Overs?: string; 
+  status?: string; 
+  matchState?: string; 
+  tossWinner?: string; 
+  tossChoice?: string; 
+  result?: string; 
+  target?: number; 
+  rrr?: string; 
+  currentInnings?: string; 
+  venue?: string; 
+  date?: string; 
+  time?: string; 
+  commentary?: any[];
+  batting?: any[];
+  bowling?: any[];
+}; 
+
+type ApiStatus = "live" | "no-match" | "paused" | "unavailable"; 
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
@@ -29,8 +58,7 @@ const Index = () => {
     const fetchMatches = async () => {
       try {
         const response = await axios.get(`${API_BASE}/live-scores`);
-        const normalized = normalizeMatches(response.data);
-        setMatches(normalized);
+        setMatches(Array.isArray(response.data) ? response.data : []);
       } catch (error) {
         console.error("Failed to fetch matches:", error);
       } finally {
@@ -44,13 +72,12 @@ const Index = () => {
     const socket = io(API_BASE);
     
     socket.on("connect", () => {
-      console.log("✅ Connected to socket (Index)");
+      console.log("✅ Connected to socket");
     });
 
     socket.on("liveScores", (data: any) => {
-      console.log("MATCHES UPDATE (Index):", data);
-      const normalized = normalizeMatches(data);
-      setMatches(normalized);
+      console.log("MATCHES UPDATE:", data);
+      setMatches(Array.isArray(data) ? data : []);
     });
 
     return () => {
@@ -59,25 +86,28 @@ const Index = () => {
   }, []);
 
   const liveMatches = useMemo(() => {
-    const filtered = matches.filter(isLiveLike);
-    console.log("RAW BACKEND MATCHES (Index):", matches);
-    console.log("MATCHES USED IN UI (Index):", matches);
-    console.log("LIVE MATCHES (Index):", filtered);
-    return filtered;
+    return matches.filter(m => {
+      const state = (m.matchState || "").toLowerCase();
+      const status = (m.status || "").toLowerCase();
+      return (
+        state === "in progress" ||
+        status.includes("need") ||
+        status.includes("opt to bat") ||
+        Boolean(m.team1Score) ||
+        Boolean(m.team2Score)
+      );
+    });
   }, [matches]);
-  
+
   const selectedMatch = useMemo(() => {
     return matches.find(m => m.id === selectedMatchId);
   }, [matches, selectedMatchId]);
 
   const heroMatch = useMemo(() => {
-    const selected = selectedMatch;
-    const firstLive = liveMatches.length > 0 ? liveMatches[0] : undefined;
-    const firstAny = matches.length > 0 ? matches[0] : undefined;
-    
-    const hero = selected || firstLive || firstAny;
-    console.log("HERO MATCH (Index):", hero);
-    return hero;
+    if (selectedMatch) return selectedMatch;
+    if (liveMatches.length > 0) return liveMatches[0];
+    if (matches.length > 0) return matches[0];
+    return undefined;
   }, [selectedMatch, liveMatches, matches]);
 
   const listMatches = useMemo(() => {
