@@ -58,7 +58,13 @@ const HomePage = () => {
     };
   }, []);
 
-  const liveMatches = useMemo(() => matches.filter(isLiveLike), [matches]);
+  const liveMatches = useMemo(() => {
+    const filtered = matches.filter(isLiveLike);
+    console.log("RAW BACKEND MATCHES:", matches);
+    console.log("MATCHES USED IN UI:", matches);
+    console.log("LIVE MATCHES:", filtered);
+    return filtered;
+  }, [matches]);
   
   const visibleMatches = useMemo(() => {
     return matches;
@@ -69,10 +75,13 @@ const HomePage = () => {
   }, [matches, selectedMatchId]);
 
   const heroMatch = useMemo(() => {
-    if (selectedMatch) return selectedMatch;
-    if (liveMatches.length > 0) return liveMatches[0];
-    if (matches.length > 0) return matches[0];
-    return undefined;
+    const selected = selectedMatch;
+    const firstLive = liveMatches.length > 0 ? liveMatches[0] : undefined;
+    const firstAny = matches.length > 0 ? matches[0] : undefined;
+    
+    const hero = selected || firstLive || firstAny;
+    console.log("HERO MATCH:", hero);
+    return hero;
   }, [selectedMatch, liveMatches, matches]);
 
   const listMatches = useMemo(() => {

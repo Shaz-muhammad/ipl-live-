@@ -108,16 +108,16 @@ export function formatOvers(overs: string): string {
 }
 
 export function isLiveLike(match: Match): boolean {
+  if (!match) return false;
+  
   const state = (match.matchState || "").toLowerCase();
   const status = (match.status || "").toLowerCase();
 
-  if (state === "complete" || status.includes("won by")) return false;
-
   return (
-    state.includes("progress") ||
+    state === "in progress" ||
     status.includes("need") ||
-    status.includes("opt") ||
-    !!match.team1Score ||
-    !!match.team2Score
+    status.includes("opt to bat") ||
+    Boolean(match.team1Score) ||
+    Boolean(match.team2Score)
   );
 }

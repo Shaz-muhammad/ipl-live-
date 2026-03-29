@@ -58,17 +58,26 @@ const Index = () => {
     };
   }, []);
 
-  const liveMatches = useMemo(() => matches.filter(isLiveLike), [matches]);
+  const liveMatches = useMemo(() => {
+    const filtered = matches.filter(isLiveLike);
+    console.log("RAW BACKEND MATCHES (Index):", matches);
+    console.log("MATCHES USED IN UI (Index):", matches);
+    console.log("LIVE MATCHES (Index):", filtered);
+    return filtered;
+  }, [matches]);
   
   const selectedMatch = useMemo(() => {
     return matches.find(m => m.id === selectedMatchId);
   }, [matches, selectedMatchId]);
 
   const heroMatch = useMemo(() => {
-    if (selectedMatch) return selectedMatch;
-    if (liveMatches.length > 0) return liveMatches[0];
-    if (matches.length > 0) return matches[0];
-    return undefined;
+    const selected = selectedMatch;
+    const firstLive = liveMatches.length > 0 ? liveMatches[0] : undefined;
+    const firstAny = matches.length > 0 ? matches[0] : undefined;
+    
+    const hero = selected || firstLive || firstAny;
+    console.log("HERO MATCH (Index):", hero);
+    return hero;
   }, [selectedMatch, liveMatches, matches]);
 
   const listMatches = useMemo(() => {
