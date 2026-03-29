@@ -1,11 +1,16 @@
 import axios from "axios"; 
  
- // 🚀 Cache State
+ // 🚀 Global State
  let cachedLiveMatches = [];
- let lastLiveFetch = 0;
- let isFetchingLive = false;
+ let lastFetchTime = 0;
+ let isFetching = false;
+ let pauseUntil = 0;
+ let currentPollingMode = "standby"; // "standby" | "live"
  
- const POLL_INTERVAL = 60000; // 60 seconds as requested
+ // ⚙️ Constants
+ const STANDBY_INTERVAL = 20 * 60 * 1000; // 20 minutes
+ const LIVE_INTERVAL = 60 * 1000;         // 1 minute
+ const PAUSE_DURATION = 20 * 60 * 1000;   // 20 minutes
  
  function getRapidKey() { 
    const key = process.env.RAPID_API_KEY; 
@@ -13,9 +18,14 @@ import axios from "axios";
    return key; 
  } 
  
- async function fetchLiveMatches() { 
+ export function pauseAPI(minutes = 20) {
+   pauseUntil = Date.now() + minutes * 60 * 1000;
+   console.log(`⚠️ API blocked/rate-limited, pausing for ${minutes} minutes`);
+ }
+ 
+ async function fetchLiveMatchesFromAPI() { 
    try { 
-     console.log("Fetching fresh data from RapidAPI (Cricbuzz)");
+     console.log("Fetching fresh live-score data from RapidAPI");
      const response = await axios.get( 
        "https://cricbuzz-cricket.p.rapidapi.com/matches/v1/live", 
        { 
@@ -23,6 +33,7 @@ import axios from "axios";
            "x-rapidapi-key": getRapidKey(), 
            "x-rapidapi-host": "cricbuzz-cricket.p.rapidapi.com", 
          }, 
+         timeout: 15000
        } 
      ); 
   
@@ -39,8 +50,12 @@ import axios from "axios";
   
      return matches; 
    } catch (error) { 
-     console.error("API error:", error.message); 
-     return []; 
+     console.error("API error:", error.message);
+     // Trigger pause on rate limit or other API failures
+     if (error.response?.status === 429 || error.message.includes("timeout") || error.message.includes("network")) {
+       pauseAPI(20);
+     }
+     return null; 
    } 
  } 
  
@@ -59,7 +74,6 @@ import axios from "axios";
    const team1Name = info.team1?.teamName;
    const team2Name = info.team2?.teamName;
  
-   // Extract scores for mergeScheduleWithLive compatibility
    const scores = [];
    if (score?.team1Score?.inngs1) {
      scores.push({
@@ -92,31 +106,61 @@ import axios from "axios";
    }; 
  } 
  
- export async function fetchCurrentMatches(force = false) { 
+ export async function fetchScores(force = false) { 
    const now = Date.now();
    
-   if (isFetchingLive) {
+   // 1. Check if paused
+   if (now < pauseUntil) {
+     console.log("API paused, returning cached data");
      return { data: cachedLiveMatches, fromCache: true };
    }
  
-   if (!force && (now - lastLiveFetch < POLL_INTERVAL) && cachedLiveMatches.length > 0) {
+   // 2. Prevent duplicate parallel requests
+   if (isFetching) {
      return { data: cachedLiveMatches, fromCache: true };
    }
  
-   isFetchingLive = true;
+   // 3. Check interval based on currentPollingMode
+   const activeInterval = currentPollingMode === "live" ? LIVE_INTERVAL : STANDBY_INTERVAL;
+   if (!force && (now - lastFetchTime < activeInterval) && cachedLiveMatches.length > 0) {
+     console.log("Returning cached data");
+     return { data: cachedLiveMatches, fromCache: true };
+   }
+ 
+   isFetching = true;
    try {
-     const matches = await fetchLiveMatches(); 
+     const matches = await fetchLiveMatchesFromAPI(); 
+     
+     if (matches === null) {
+       // API failed, return cache
+       return { data: cachedLiveMatches, fromCache: true };
+     }
+
      const iplMatches = matches.filter(isIPL); 
      const formatted = iplMatches.map(normalizeMatch); 
   
-     if (formatted.length > 0 || matches.length > 0) {
-       cachedLiveMatches = formatted;
-       lastLiveFetch = now;
+     cachedLiveMatches = formatted;
+     lastFetchTime = now;
+
+     // Update polling mode based on live IPL match status
+     const hasLiveMatch = formatted.some(m => isMatchLive(m));
+     const newMode = hasLiveMatch ? "live" : "standby";
+     if (newMode !== currentPollingMode) {
+       currentPollingMode = newMode;
+       console.log(`Polling mode: ${currentPollingMode}`);
      }
+
+     if (now >= pauseUntil && pauseUntil !== 0) {
+        // Log resume if it was paused before
+        console.log("API resumed");
+        pauseUntil = 0;
+     }
+
    } catch (err) {
-     console.error("❌ [RAPIDAPI] Error fetching live matches:", err.message);
+     console.error("❌ Error in fetchScores:", err.message);
+     pauseAPI(20);
    } finally {
-     isFetchingLive = false;
+     isFetching = false;
    }
  
    return { data: cachedLiveMatches, fromCache: false }; 
@@ -127,17 +171,19 @@ import axios from "axios";
  }
  
  export function getApiStatus(mergedMatches = []) {
+   const now = Date.now();
    const hasLiveMatch = mergedMatches.some((m) => m.status === "live");
+
    if (hasLiveMatch) return "live";
-   if (cachedLiveMatches.length === 0 && lastLiveFetch === 0) return "unavailable";
+   if (now < pauseUntil) {
+     // If paused but we have cached live matches, it's still "live" (frontend logic will handle)
+     // But for status field:
+     return cachedLiveMatches.length > 0 ? "live" : "paused";
+   }
+   if (cachedLiveMatches.length === 0 && lastFetchTime === 0) return "unavailable";
    return "no-match";
  }
  
- // Maintain existing exports for server.js
- export const fetchScores = fetchCurrentMatches;
- 
- // Minimal implementation for match details since we switched to Cricbuzz
- // In a real scenario, we'd call Cricbuzz match info/scorecard endpoints.
  export async function getMatchDetails(matchId) { 
    const match = cachedLiveMatches.find(m => m.id === String(matchId));
    if (match) {
@@ -158,19 +204,30 @@ import axios from "axios";
    return null;
  } 
  
- // Compatibility helpers for server.js
  export function getPollInterval(hasLiveMatch) {
-   return POLL_INTERVAL;
+   return hasLiveMatch ? LIVE_INTERVAL : STANDBY_INTERVAL;
  }
  
  export function getCurrentPollingMode() {
-   return "live";
+   return currentPollingMode;
  }
  
  export function setCurrentPollingMode(mode) {
-   // No-op for now as we have a fixed interval
+   currentPollingMode = mode;
  }
  
  export function isMatchLive(match) {
-   return match.matchStarted && !match.matchEnded;
+   // A match should be considered live if:
+   // - matchStarted === true and matchEnded === false
+   // OR
+   // - matchState === "live"
+   // OR
+   // - score exists and match is active
+   const state = String(match?.matchState ?? "").toLowerCase();
+   const status = String(match?.status ?? "").toLowerCase();
+   
+   const isActiveState = state === "live" || state === "in progress" || state === "inprogress";
+   const hasScore = match?.score?.length > 0;
+   
+   return (match?.matchStarted && !match?.matchEnded) || isActiveState || (hasScore && !match?.matchEnded);
  }

@@ -71,7 +71,10 @@ const Index = () => {
         setLastValidMatches(data);
       } else {
         console.log("⚠️ Empty response data");
-        setCricMatches([]);
+        // Only clear matches if we don't have a valid cache to show
+        if (lastValidMatches.length === 0) {
+          setCricMatches([]);
+        }
       }
 
       setIsLoading(false);
