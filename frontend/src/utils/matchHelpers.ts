@@ -31,9 +31,15 @@ export function getTeamLogoFromRaw(team: RawTeam, explicitLogo?: string): string
   return "🏏";
 }
 
-export function isUrl(text: string | undefined): boolean {
-  if (!text) return false;
-  return text.startsWith("http") || text.startsWith("https") || text.startsWith("/");
+export function isUrl(text: any): boolean {
+  if (typeof text !== "string") return false;
+  const trimmed = text.trim();
+  return (
+    trimmed.startsWith("http://") ||
+    trimmed.startsWith("https://") ||
+    trimmed.startsWith("/") ||
+    trimmed.startsWith("data:image/")
+  );
 }
 
 export function normalizeMatch(raw: RawMatch, index: number = 0): Match {
