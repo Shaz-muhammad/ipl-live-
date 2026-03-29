@@ -31,6 +31,11 @@ export function getTeamLogoFromRaw(team: RawTeam, explicitLogo?: string): string
   return "🏏";
 }
 
+export function isUrl(text: string | undefined): boolean {
+  if (!text) return false;
+  return text.startsWith("http") || text.startsWith("https") || text.startsWith("/");
+}
+
 export function normalizeMatch(raw: RawMatch, index: number = 0): Match {
   const id = String(raw.id || `match-${index}`);
   const team1 = getTeamNameFromRaw(raw.team1);

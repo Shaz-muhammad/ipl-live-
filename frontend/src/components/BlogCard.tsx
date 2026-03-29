@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { ExternalLink, Calendar, Newspaper } from "lucide-react";
+import { isUrl } from "@/utils/matchHelpers";
 
 export interface Blog {
   id: string;
@@ -42,11 +43,11 @@ export function BlogCard({ blog, index }: Props) {
     >
       {/* Thumbnail Area */}
       <div className="relative aspect-video overflow-hidden bg-secondary/20">
-        {!blog.image || imgError ? (
+        {!isUrl(blog.image || "") || imgError ? (
           <Placeholder />
         ) : (
           <img
-            src={blog.image}
+            src={blog.image!}
             alt={blog.title}
             onError={() => setImgError(true)}
             className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-110"

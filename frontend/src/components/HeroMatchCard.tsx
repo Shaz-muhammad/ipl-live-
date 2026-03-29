@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { LiveBadge } from "./LiveBadge";
+import { TeamLogo } from "./TeamLogo";
 import type { Match } from "../types/match";
 import { 
   getTeamLabel, 
@@ -64,9 +65,11 @@ export function HeroMatchCard({ match, onTeamClick }: Props) {
           }}
         >
           <div className="flex flex-col items-center gap-1">
-             <span className="text-3xl md:text-4xl filter drop-shadow-neon-sm group-hover:scale-110 transition-transform">
-              {match.team1Logo || "🏏"}
-            </span>
+             <TeamLogo 
+               logo={match.team1Logo} 
+               name={team1DisplayName} 
+               className="text-3xl md:text-4xl h-12 w-12 md:h-16 md:w-16 filter drop-shadow-neon-sm group-hover:scale-110 transition-transform"
+             />
             <span className="font-heading text-xs font-bold text-muted-foreground uppercase tracking-tighter">
               {match.team1Short || team1DisplayName.substring(0, 3).toUpperCase()}
             </span>
@@ -109,9 +112,11 @@ export function HeroMatchCard({ match, onTeamClick }: Props) {
             )}
           </div>
           <div className="flex flex-col items-center gap-1">
-            <span className="text-3xl md:text-4xl filter drop-shadow-neon-sm group-hover:scale-110 transition-transform">
-              {match.team2Logo || "🏏"}
-            </span>
+            <TeamLogo 
+              logo={match.team2Logo} 
+              name={team2DisplayName} 
+              className="text-3xl md:text-4xl h-12 w-12 md:h-16 md:w-16 filter drop-shadow-neon-sm group-hover:scale-110 transition-transform"
+            />
             <span className="font-heading text-xs font-bold text-muted-foreground uppercase tracking-tighter">
               {match.team2Short || team2DisplayName.substring(0, 3).toUpperCase()}
             </span>

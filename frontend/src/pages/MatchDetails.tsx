@@ -4,6 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { LiveBadge } from "@/components/LiveBadge";
+import { TeamLogo } from "@/components/TeamLogo";
 import { Scorecard } from "@/components/Scorecard";
 import { Commentary } from "@/components/Commentary";
 import { Footer } from "@/components/Footer";
@@ -101,7 +102,11 @@ const MatchDetails = () => {
         >
           <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4 md:gap-8 mb-6">
             <div className="flex flex-col items-center gap-2">
-              <span className="text-4xl filter drop-shadow-neon-sm">{match.team1Logo || "🏏"}</span>
+              <TeamLogo 
+                logo={match.team1Logo} 
+                name={getTeamLabel(match.team1Short, match.team1)} 
+                className="text-4xl h-16 w-16 filter drop-shadow-neon-sm"
+              />
               <p className="font-heading font-bold text-foreground text-sm uppercase">
                 {getTeamLabel(match.team1Short, match.team1)}
               </p>
@@ -116,7 +121,11 @@ const MatchDetails = () => {
             <div className="font-display text-[10px] text-muted-foreground/50 font-bold">VS</div>
 
             <div className="flex flex-col items-center gap-2">
-              <span className="text-4xl filter drop-shadow-neon-sm">{match.team2Logo || "🏏"}</span>
+              <TeamLogo 
+                logo={match.team2Logo} 
+                name={getTeamLabel(match.team2Short, match.team2)} 
+                className="text-4xl h-16 w-16 filter drop-shadow-neon-sm"
+              />
               <p className="font-heading font-bold text-foreground text-sm uppercase">
                 {getTeamLabel(match.team2Short, match.team2)}
               </p>

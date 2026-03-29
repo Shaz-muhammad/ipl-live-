@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import type { Match } from "../types/match";
+import { TeamLogo } from "./TeamLogo";
 import {
   formatOvers,
   formatStatus,
@@ -41,17 +42,11 @@ export default function MatchCard({ match, onClick }: MatchCardProps) {
       <div className="space-y-3">
         <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
-            {match.team1Logo ? (
-              <img
-                src={match.team1Logo}
-                alt={team1Name}
-                className="h-10 w-10 rounded-full object-cover"
-              />
-            ) : (
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-cyan-500/20 text-sm font-bold text-cyan-200">
-                {getInitials(team1Name)}
-              </div>
-            )}
+            <TeamLogo 
+              logo={match.team1Logo} 
+              name={team1Name} 
+              fallbackClassName="bg-cyan-500/20 text-sm font-bold text-cyan-200"
+            />
 
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold text-white">
@@ -72,17 +67,11 @@ export default function MatchCard({ match, onClick }: MatchCardProps) {
 
         <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
-            {match.team2Logo ? (
-              <img
-                src={match.team2Logo}
-                alt={team2Name}
-                className="h-10 w-10 rounded-full object-cover"
-              />
-            ) : (
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-fuchsia-500/20 text-sm font-bold text-fuchsia-200">
-                {getInitials(team2Name)}
-              </div>
-            )}
+            <TeamLogo 
+              logo={match.team2Logo} 
+              name={team2Name} 
+              fallbackClassName="bg-fuchsia-500/20 text-sm font-bold text-fuchsia-200"
+            />
 
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold text-white">
