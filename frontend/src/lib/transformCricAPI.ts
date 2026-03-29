@@ -48,6 +48,8 @@ export interface MergedMatch {
   id?: string;
   apiId?: string;
   teams?: string[];
+  team1?: string;
+  team2?: string;
   homeTeam?: string;
   awayTeam?: string;
   team1Logo?: string;
@@ -73,8 +75,13 @@ export interface Match {
   team2Score: string;
   team1Overs: string;
   team2Overs: string;
+  team1Short?: string;
+  team2Short?: string;
+  team1Logo?: string;
+  team2Logo?: string;
   status: "live" | "upcoming" | "finished";
   statusText: string;
+  matchState?: string;
   tossWinner?: string;
   tossChoice?: string;
   result?: string;
@@ -170,7 +177,7 @@ export function transformMergedMatch(match: MergedMatch): Match {
     team1Overs,
     team2Overs,
 
-    status: match.status,
+    status: match.status || "upcoming",
     statusText: match.statusText || "Match info unavailable",
 
     venue: match.venue || "Unknown venue",

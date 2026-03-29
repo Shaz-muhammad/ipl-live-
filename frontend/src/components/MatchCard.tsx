@@ -1,40 +1,7 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { LiveBadge } from "./LiveBadge";
-
-export interface Match {
-  id: string;
-  apiId?: string;
-
-  team1: string;
-  team2: string;
-
-  team1Short?: string;
-  team2Short?: string;
-
-  team1Logo?: string;
-  team2Logo?: string;
-
-  team1Score?: string;
-  team2Score?: string;
-
-  team1Overs?: string;
-  team2Overs?: string;
-
-  status?: string;
-  matchState?: string;
-
-  tossWinner?: string;
-  tossChoice?: string;
-  result?: string;
-  target?: number;
-  rrr?: string;
-  currentInnings?: string;
-
-  venue?: string;
-  date?: string;
-  time?: string;
-}
+import type { Match } from "@/lib/transformCricAPI";
 
 interface Props {
   match: Match;
@@ -57,113 +24,97 @@ export function MatchCard({ match, index, onTeamClick }: Props) {
     Boolean(match.team1Score) ||
     Boolean(match.team2Score);
 
-  const isFinished = state === "complete" || statusText.includes("won by");
+  const isFinished = state === "complete" || statusText.includes("won by") || state === "completed";
 
   const displayStatus = isLive ? "live" : isFinished ? "finished" : "upcoming";
 
-  const team1Id = match.team1Short || match.team1;
-  const team2Id = match.team2Short || match.team2;
+  const team1Id = match.team1.id;
+  const team2Id = match.team2.id;
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1, duration: 0.4 }}
-      whileHover={{ scale: 1.02, y: -4 }}
+      whileHover={{ scale: 1.02, y: -2 }}
       onClick={() => navigate(`/match/${match.apiId || match.id}`)}
-      className={`glass-card cursor-pointer p-5 transition-shadow duration-300 ${
-        isLive ? "neon-border" : "border border-border"
+      className={`glass-card cursor-pointer p-4 transition-all duration-300 relative overflow-hidden ${
+        isLive ? "neon-border shadow-neon-sm" : "border border-border/50"
       }`}
     >
-      {/* Header */}
-      <div className="flex items-center justify-between mb-3">
-        {isLive ? (
-          <LiveBadge />
-        ) : (
-          <span className="text-xs text-muted-foreground uppercase">
-            {displayStatus}
-          </span>
-        )}
-
-        <span className="text-[10px] text-muted-foreground">
+      {/* Header Info */}
+      <div className="flex items-center justify-between mb-4 border-b border-border/10 pb-2">
+        <div className="flex items-center gap-2">
+          {isLive ? (
+            <LiveBadge />
+          ) : (
+            <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${
+              isFinished ? "bg-muted text-muted-foreground" : "bg-neon-blue/10 text-neon-blue"
+            }`}>
+              {isFinished ? "Finished" : "Upcoming"}
+            </span>
+          )}
+        </div>
+        <span className="text-[9px] text-muted-foreground font-medium uppercase tracking-tight">
           {match.date || "—"} {match.time && `• ${match.time}`}
         </span>
       </div>
 
-      {/* Teams */}
-      <div className="flex items-center justify-between">
-        {/* Team 1 */}
-        <div className="flex items-center gap-3 flex-1">
-          <motion.span
-            whileHover={{ scale: 1.2 }}
-            className="text-2xl cursor-pointer"
-            onClick={(e) => {
-              e.stopPropagation();
-              onTeamClick(team1Id, "#00ffff", "#0ea5e9");
-            }}
-          >
-            {match.team1Logo || "🏏"}
-          </motion.span>
-
-          <div>
-            <p className="font-heading font-bold text-sm text-foreground">
-              {match.team1Short || match.team1 || "T1"}
-            </p>
-            <p className="font-display text-sm neon-text">
+      {/* Teams & Scores (Cricbuzz Style List) */}
+      <div className="space-y-3">
+        {/* Team 1 Row */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+             <span className="text-xl filter drop-shadow-neon-sm">
+              {match.team1.logo}
+            </span>
+            <span className={`font-heading font-bold text-sm ${isLive ? 'text-foreground' : 'text-foreground/80'}`}>
+              {match.team1Short || match.team1.shortName}
+            </span>
+          </div>
+          <div className="flex items-baseline gap-1.5">
+            <span className="font-display font-bold text-base neon-text">
               {match.team1Score || "—"}
-            </p>
+            </span>
+            {match.team1Overs && (
+              <span className="text-[9px] text-muted-foreground">
+                ({match.team1Overs})
+              </span>
+            )}
           </div>
         </div>
 
-        <span className="font-display text-[10px] text-muted-foreground mx-2">
-          VS
-        </span>
-
-        {/* Team 2 */}
-        <div className="flex items-center gap-3 flex-1 justify-end text-right">
-          <div>
-            <p className="font-heading font-bold text-sm text-foreground">
-              {match.team2Short || match.team2 || "T2"}
-            </p>
-            <p className="font-display text-sm neon-text">
-              {match.team2Score || "—"}
-            </p>
+        {/* Team 2 Row */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+             <span className="text-xl filter drop-shadow-neon-sm">
+              {match.team2.logo}
+            </span>
+            <span className={`font-heading font-bold text-sm ${isLive ? 'text-foreground' : 'text-foreground/80'}`}>
+              {match.team2Short || match.team2.shortName}
+            </span>
           </div>
-
-          <motion.span
-            whileHover={{ scale: 1.2 }}
-            className="text-2xl cursor-pointer"
-            onClick={(e) => {
-              e.stopPropagation();
-              onTeamClick(team2Id, "#a855f7", "#ec4899");
-            }}
-          >
-            {match.team2Logo || "🏏"}
-          </motion.span>
+          <div className="flex items-baseline gap-1.5">
+            <span className="font-display font-bold text-base neon-text">
+              {match.team2Score || "—"}
+            </span>
+            {match.team2Overs && (
+              <span className="text-[9px] text-muted-foreground">
+                ({match.team2Overs})
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Match Info */}
-      <div className="mt-4 space-y-2">
-        {displayStatus === "finished" && match.result && (
-          <p className="text-xs font-bold text-center neon-text uppercase">
-            {match.result}
-          </p>
-        )}
-
-        {isLive && match.status && (
-          <p className="text-[10px] text-center neon-text-accent font-bold uppercase">
-            {match.status}
-          </p>
-        )}
-
-        {match.tossWinner && match.tossChoice && (
-          <p className="text-[10px] text-center text-muted-foreground italic">
-            {match.tossWinner} won the toss and elected to {match.tossChoice}
-          </p>
-        )}
-
-        <p className="text-xs text-center text-muted-foreground border-t pt-2">
+      {/* Status Footer */}
+      <div className="mt-4 pt-2 border-t border-border/10">
+        <p className={`text-[11px] font-heading font-bold truncate ${
+          isLive ? 'neon-text-accent animate-pulse' : 'text-muted-foreground'
+        }`}>
+          {isFinished ? (match.result || "Match Completed") : (match.status || "Upcoming Match")}
+        </p>
+        <p className="text-[9px] text-muted-foreground/60 mt-1 truncate">
           {match.venue || "Unknown venue"}
         </p>
       </div>

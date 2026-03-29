@@ -1,39 +1,7 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { LiveBadge } from "./LiveBadge";
-
-export interface Match {
-  id: string;
-  apiId?: string;
-
-  team1: string;
-  team2: string;
-
-  team1Short?: string;
-  team2Short?: string;
-
-  team1Logo?: string;
-  team2Logo?: string;
-
-  team1Score?: string;
-  team2Score?: string;
-
-  team1Overs?: string;
-  team2Overs?: string;
-
-  status?: string;
-  matchState?: string;
-
-  tossWinner?: string;
-  tossChoice?: string;
-  result?: string;
-  target?: number;
-  rrr?: string;
-  currentInnings?: string;
-  venue?: string;
-  date?: string;
-  time?: string;
-}
+import type { Match } from "@/lib/transformCricAPI";
 
 interface Props {
   match: Match;
@@ -67,13 +35,13 @@ export function HeroMatchCard({ match, onTeamClick }: Props) {
 
   const displayStatus = isLive ? "live" : isFinished ? "finished" : "upcoming";
 
-  const team1Id = match.team1Short || match.team1;
-  const team2Id = match.team2Short || match.team2;
+  const team1Id = match.team1.id;
+  const team2Id = match.team2.id;
 
-  const team1Primary = "#00ffff";
-  const team1Secondary = "#0ea5e9";
-  const team2Primary = "#a855f7";
-  const team2Secondary = "#ec4899";
+  const team1Primary = match.team1.primaryColor;
+  const team1Secondary = match.team1.secondaryColor;
+  const team2Primary = match.team2.primaryColor;
+  const team2Secondary = match.team2.secondaryColor;
 
   return (
     <motion.div
@@ -81,116 +49,123 @@ export function HeroMatchCard({ match, onTeamClick }: Props) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
       onClick={() => navigate(`/match/${match.apiId || match.id}`)}
-      className="glass-card neon-border cursor-pointer p-6 md:p-8 max-w-2xl mx-auto"
+      className="glass-card neon-border cursor-pointer p-5 md:p-6 max-w-2xl mx-auto overflow-hidden relative"
     >
-      <div className="flex items-center justify-between mb-4">
-        {displayStatus === "live" ? (
-          <LiveBadge />
-        ) : (
-          <span className="text-xs text-muted-foreground">{displayStatus}</span>
-        )}
-
-        <span className="text-xs text-muted-foreground font-body">
-          {match.venue || "Unknown venue"}
-          {match.date ? ` • ${match.date}` : ""}
-          {match.time ? ` • ${match.time}` : ""}
-        </span>
-      </div>
-
-      <div className="flex items-center justify-between gap-4">
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-          className="flex flex-col items-center gap-2 flex-1 cursor-pointer"
-          onClick={(e) => {
-            e.stopPropagation();
-            onTeamClick(team1Id, team1Primary, team1Secondary);
-          }}
-        >
-          <span className="text-4xl md:text-5xl">
-            {match.team1Logo || "🏏"}
-          </span>
-          <span className="font-heading text-lg font-bold text-foreground">
-            {match.team1Short || match.team1 || "T1"}
-          </span>
-          <span className="font-display text-xl md:text-2xl neon-text font-bold">
-            {match.team1Score || "—"}
-          </span>
-          {match.team1Overs && (
-            <span className="text-xs text-muted-foreground">
-              ({match.team1Overs} ov)
+      {/* Background Accent */}
+      <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl rounded-full -mr-16 -mt-16 pointer-events-none" />
+      
+      {/* 1. TOP ROW: Badge & Venue/Time */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-2">
+          {displayStatus === "live" ? (
+            <LiveBadge />
+          ) : (
+            <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${
+              isFinished ? "bg-muted text-muted-foreground" : "bg-neon-blue/10 text-neon-blue"
+            }`}>
+              {isFinished ? "Match Finished" : "Upcoming"}
             </span>
           )}
-        </motion.div>
+        </div>
+        <div className="text-[10px] md:text-xs text-muted-foreground font-medium truncate ml-4">
+          {match.venue || "Unknown venue"} {match.date ? ` • ${match.date}` : ""}
+        </div>
+      </div>
 
-        <div className="flex flex-col items-center">
-          <span className="font-display text-sm text-muted-foreground tracking-widest">
-            VS
-          </span>
+      {/* 2. CENTER SCORE AREA (Information Dense) */}
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4 md:gap-8 mb-6">
+        {/* Team 1 */}
+        <div className="flex items-center gap-3">
+          <div className="flex flex-col items-center gap-1">
+             <span className="text-3xl md:text-4xl filter drop-shadow-neon-sm">
+              {match.team1.logo}
+            </span>
+            <span className="font-heading text-xs font-bold text-muted-foreground uppercase tracking-tighter">
+              {match.team1Short || match.team1.shortName}
+            </span>
+          </div>
+          <div className="flex flex-col">
+            <span className="font-display text-xl md:text-3xl font-bold text-foreground leading-none">
+              {match.team1Score || "—"}
+            </span>
+            {match.team1Overs && (
+              <span className="text-[10px] md:text-xs text-muted-foreground font-medium mt-1">
+                ({match.team1Overs} ov)
+              </span>
+            )}
+          </div>
         </div>
 
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-          className="flex flex-col items-center gap-2 flex-1 cursor-pointer"
-          onClick={(e) => {
-            e.stopPropagation();
-            onTeamClick(team2Id, team2Primary, team2Secondary);
-          }}
-        >
-          <span className="text-4xl md:text-5xl">
-            {match.team2Logo || "🏏"}
+        {/* VS Divider */}
+        <div className="flex flex-col items-center">
+          <div className="h-8 w-[1px] bg-border/50" />
+          <span className="font-display text-[10px] text-muted-foreground/50 my-1 font-bold">
+            VS
           </span>
-          <span className="font-heading text-lg font-bold text-foreground">
-            {match.team2Short || match.team2 || "T2"}
-          </span>
-          <span className="font-display text-xl md:text-2xl neon-text font-bold">
-            {match.team2Score || "—"}
-          </span>
-          {match.team2Overs && (
-            <span className="text-xs text-muted-foreground">
-              ({match.team2Overs} ov)
+          <div className="h-8 w-[1px] bg-border/50" />
+        </div>
+
+        {/* Team 2 */}
+        <div className="flex items-center gap-3 justify-end text-right">
+          <div className="flex flex-col items-end">
+            <span className="font-display text-xl md:text-3xl font-bold text-foreground leading-none">
+              {match.team2Score || "—"}
             </span>
-          )}
-        </motion.div>
+            {match.team2Overs && (
+              <span className="text-[10px] md:text-xs text-muted-foreground font-medium mt-1">
+                ({match.team2Overs} ov)
+              </span>
+            )}
+          </div>
+          <div className="flex flex-col items-center gap-1">
+            <span className="text-3xl md:text-4xl filter drop-shadow-neon-sm">
+              {match.team2.logo}
+            </span>
+            <span className="font-heading text-xs font-bold text-muted-foreground uppercase tracking-tighter">
+              {match.team2Short || match.team2.shortName}
+            </span>
+          </div>
+        </div>
       </div>
 
-      <div className="mt-6 space-y-3 text-center">
-        {displayStatus === "finished" && match.result && (
-          <motion.p
-            initial={{ scale: 0.9 }}
-            animate={{ scale: 1 }}
-            className="text-sm md:text-base font-bold neon-text uppercase tracking-widest bg-secondary/20 py-2 rounded-lg"
-          >
-            {match.result}
-          </motion.p>
-        )}
+      {/* 3. STATUS LINE & EXTRA INFO */}
+      <div className="pt-4 border-t border-border/30 space-y-3">
+        {/* Primary Status Sentence */}
+        <p className={`text-sm md:text-base font-heading font-bold text-center ${
+          displayStatus === "live" ? "neon-text-accent animate-pulse" : "text-foreground"
+        }`}>
+          {displayStatus === "upcoming" 
+            ? `Starts at ${match.time || "TBD"}` 
+            : (match.result || statusText || "Match info unavailable")}
+        </p>
 
-        {displayStatus === "live" &&
-          match.currentInnings === "2nd Innings" &&
-          match.target && (
-            <div className="flex justify-center gap-4 text-[10px] md:text-xs font-bold neon-text-accent uppercase tracking-wider">
-              <span>Target: {match.target}</span>
-              {match.rrr && match.rrr !== "0" && <span>RRR: {match.rrr}</span>}
-            </div>
+        {/* Compact Details Row */}
+        <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-[10px] md:text-xs text-muted-foreground font-medium">
+          {match.tossWinner && match.tossChoice && (
+            <span className="flex items-center gap-1">
+              <span className="w-1 h-1 rounded-full bg-primary/40" />
+              {match.tossWinner} elected to {match.tossChoice}
+            </span>
           )}
-
-        {displayStatus !== "upcoming" &&
-          match.tossWinner &&
-          match.tossChoice && (
-            <p className="text-xs text-muted-foreground italic font-body">
-              {match.tossWinner} won the toss and elected to {match.tossChoice}{" "}
-              first.
-            </p>
+          {match.target && match.target > 0 && (
+            <span className="flex items-center gap-1 text-neon-blue font-bold">
+              <span className="w-1 h-1 rounded-full bg-neon-blue" />
+              Target: {match.target}
+            </span>
           )}
-
-        <motion.p
-          className="text-sm font-heading font-semibold neon-text-accent"
-          animate={{ opacity: [0.7, 1, 0.7] }}
-          transition={{ duration: 2, repeat: Infinity }}
-        >
-          {displayStatus === "upcoming"
-            ? "Match not started"
-            : statusText || "Match info unavailable"}
-        </motion.p>
+          {match.rrr && match.rrr !== "0" && (
+            <span className="flex items-center gap-1 text-neon-red font-bold">
+              <span className="w-1 h-1 rounded-full bg-neon-red" />
+              RRR: {match.rrr}
+            </span>
+          )}
+          {match.currentInnings && (
+            <span className="flex items-center gap-1">
+              <span className="w-1 h-1 rounded-full bg-primary/40" />
+              {match.currentInnings}
+            </span>
+          )}
+        </div>
       </div>
     </motion.div>
   );
