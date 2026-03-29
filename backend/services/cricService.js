@@ -245,16 +245,18 @@ import axios from "axios";
    if (match) {
      return {
        ...match,
-       team1: { shortName: match.team1, logo: "🏏" },
-       team2: { shortName: match.team2, logo: "🏏" },
+       team1: String(match.team1 || "Team 1"),
+       team2: String(match.team2 || "Team 2"),
+       team1Short: String(match.team1Short || match.team1 || "T1").substring(0, 4).toUpperCase(),
+       team2Short: String(match.team2Short || match.team2 || "T2").substring(0, 4).toUpperCase(),
        team1Score: match.team1Score,
        team2Score: match.team2Score,
        team1Overs: match.team1Overs,
        team2Overs: match.team2Overs,
-       statusText: match.status,
-       commentary: [],
-       batting: [],
-       bowling: []
+       status: match.status,
+       commentary: match.commentary || [],
+       batting: match.batting || [],
+       bowling: match.bowling || []
      };
    }
    return null;

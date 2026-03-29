@@ -214,8 +214,10 @@ export function buildMatchDetails({ matchId, matchInfoRaw, matchScorecardRaw }) 
 
   return {
     id: String(matchId),
-    team1,
-    team2,
+    team1: String(team1Name || "Team 1"),
+    team2: String(team2Name || "Team 2"),
+    team1Short: String(team1?.shortName || team1Name || "T1").substring(0, 4).toUpperCase(),
+    team2Short: String(team2?.shortName || team2Name || "T2").substring(0, 4).toUpperCase(),
     team1Logo: team1?.logo || "🏏",
     team2Logo: team2?.logo || "🏏",
     team1Score: team1Score ?? "",

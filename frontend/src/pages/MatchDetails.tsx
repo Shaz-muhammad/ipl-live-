@@ -8,7 +8,7 @@ import { Scorecard } from "@/components/Scorecard";
 import { Commentary } from "@/components/Commentary";
 import { Footer } from "@/components/Footer";
 import { api } from "@/services/api";
-import type { Match } from "@/lib/transformCricAPI";
+import type { Match } from "@/types/match";
 
 type Tab = "summary" | "scorecard" | "commentary" | "info";
 
@@ -124,7 +124,7 @@ const MatchDetails = () => {
 
           <div className="mt-4 pt-4 border-t border-border/20 text-center space-y-2">
             <p className="text-sm font-heading font-bold text-neon-text-accent uppercase tracking-wider">
-              {match.result || match.statusText}
+              {match.result || match.status}
             </p>
             {match.venue && (
               <p className="text-[10px] text-muted-foreground opacity-70">

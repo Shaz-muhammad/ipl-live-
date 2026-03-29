@@ -9,32 +9,7 @@ import { WatchLiveModal } from "@/components/WatchLiveModal";
 import { AdminPanel } from "@/components/AdminPanel";
 import { useTeamTheme } from "@/hooks/useTeamTheme";
 import { connectSocket } from "@/services/socket";
-
-export type Match = { 
-  id: string; 
-  apiId?: string; 
-  team1: string; 
-  team2: string; 
-  team1Short?: string; 
-  team2Short?: string; 
-  team1Logo?: string; 
-  team2Logo?: string; 
-  team1Score?: string; 
-  team2Score?: string; 
-  team1Overs?: string; 
-  team2Overs?: string; 
-  status?: string; 
-  matchState?: string; 
-  tossWinner?: string; 
-  tossChoice?: string; 
-  result?: string; 
-  target?: number; 
-  rrr?: string; 
-  currentInnings?: string; 
-  venue?: string; 
-  date?: string; 
-  time?: string; 
-}; 
+import type { Match } from "@/types/match";
 
 type ApiStatus = "live" | "no-match" | "paused" | "unavailable"; 
 
@@ -67,7 +42,7 @@ const Index = () => {
     });
 
     const onLiveScores = (response: LiveScoreResponse | Match[]) => {
-      console.log("SOCKET DATA:", response);
+      console.log("SOCKET PAYLOAD:", response);
 
       let status: ApiStatus = "live";
       let data: Match[] = [];
@@ -83,6 +58,7 @@ const Index = () => {
       setCricMatches(data);
 
       if (data.length > 0) {
+        console.log("RAW BACKEND MATCHES:", data);
         setLastValidMatches(data);
       }
 
@@ -108,7 +84,7 @@ const Index = () => {
   }, []);
 
   const liveMatches = useMemo(() => {
-    return matches.filter((m) => {
+    const live = matches.filter((m) => {
       const state = m.matchState?.toLowerCase() || "";
       const status = m.status?.toLowerCase() || "";
       return (
@@ -120,14 +96,19 @@ const Index = () => {
         Boolean(m.team2Score)
       );
     });
+    console.log("MATCHES USED IN UI:", matches);
+    console.log("LIVE MATCHES:", live);
+    return live;
   }, [matches]);
 
   const heroMatch = useMemo(() => {
-    return liveMatches.length > 0 
+    const match = liveMatches.length > 0 
       ? liveMatches[0] 
       : matches.length > 0 
       ? matches[0] 
       : undefined;
+    console.log("HERO MATCH:", match);
+    return match;
   }, [liveMatches, matches]);
 
   const listMatches = useMemo(() => {
@@ -176,7 +157,7 @@ const Index = () => {
 
             {listMatches.length > 0 && (
               <section>
-                <SectionHeader icon="🏏" title="More Matches" />
+                <SectionHeader icon="🏏" title="Recent Matches" />
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {listMatches.map((m, i) => (
                     <MatchCard

@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { LiveBadge } from "./LiveBadge";
-import type { Match } from "@/pages/Index";
+import type { Match } from "@/types/match";
 
 interface Props {
   match: Match;

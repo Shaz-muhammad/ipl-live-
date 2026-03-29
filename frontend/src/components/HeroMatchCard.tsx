@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { LiveBadge } from "./LiveBadge";
-import type { Match } from "@/pages/Index";
+import type { Match } from "@/types/match";
 
 interface Props {
   match: Match;
@@ -20,13 +20,19 @@ export function HeroMatchCard({ match, onTeamClick }: Props) {
     state.includes("progress") ||
     status.includes("need") ||
     status.includes("opt") ||
-    status.includes("won toss");
+    status.includes("won toss") ||
+    Boolean(match.team1Score) ||
+    Boolean(match.team2Score);
 
   const isFinished =
     state === "complete" ||
+    state === "completed" ||
     status.includes("won by");
 
   const displayStatus = isLive ? "live" : isFinished ? "finished" : "upcoming";
+
+  const team1DisplayName = String(match.team1Short || match.team1 || "Team 1");
+  const team2DisplayName = String(match.team2Short || match.team2 || "Team 2");
 
   return (
     <motion.div
@@ -60,7 +66,7 @@ export function HeroMatchCard({ match, onTeamClick }: Props) {
           className="flex items-center gap-3 cursor-pointer group"
           onClick={(e) => {
             e.stopPropagation();
-            onTeamClick(match.team1Short || match.team1, "#00ffff", "#0ea5e9");
+            onTeamClick(team1DisplayName, "#00ffff", "#0ea5e9");
           }}
         >
           <div className="flex flex-col items-center gap-1">
@@ -68,7 +74,7 @@ export function HeroMatchCard({ match, onTeamClick }: Props) {
               {match.team1Logo || "🏏"}
             </span>
             <span className="font-heading text-xs font-bold text-muted-foreground uppercase tracking-tighter">
-              {match.team1Short || match.team1?.substring(0, 3)}
+              {(match.team1Short || match.team1 || "").substring(0, 3)}
             </span>
           </div>
           <div className="flex flex-col">
@@ -95,7 +101,7 @@ export function HeroMatchCard({ match, onTeamClick }: Props) {
           className="flex items-center gap-3 justify-end text-right cursor-pointer group"
           onClick={(e) => {
             e.stopPropagation();
-            onTeamClick(match.team2Short || match.team2, "#a855f7", "#ec4899");
+            onTeamClick(team2DisplayName, "#a855f7", "#ec4899");
           }}
         >
           <div className="flex flex-col items-end">
@@ -113,7 +119,7 @@ export function HeroMatchCard({ match, onTeamClick }: Props) {
               {match.team2Logo || "🏏"}
             </span>
             <span className="font-heading text-xs font-bold text-muted-foreground uppercase tracking-tighter">
-              {match.team2Short || match.team2?.substring(0, 3)}
+              {(match.team2Short || match.team2 || "").substring(0, 3)}
             </span>
           </div>
         </div>
@@ -125,7 +131,7 @@ export function HeroMatchCard({ match, onTeamClick }: Props) {
         }`}>
           {displayStatus === "upcoming" 
             ? `Starts at ${match.time || "TBD"}` 
-            : (match.status || "Match info unavailable")}
+            : (match.result || match.status || "Match info unavailable")}
         </p>
 
         <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-[10px] md:text-xs text-muted-foreground font-medium">

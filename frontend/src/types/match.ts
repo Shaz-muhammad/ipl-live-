@@ -1,0 +1,28 @@
+export type Match = { 
+  id: string; 
+  apiId?: string; 
+  team1: string; 
+  team2: string; 
+  team1Short?: string; 
+  team2Short?: string; 
+  team1Logo?: string; 
+  team2Logo?: string; 
+  team1Score?: string; 
+  team2Score?: string; 
+  team1Overs?: string; 
+  team2Overs?: string; 
+  status?: string; 
+  matchState?: string; 
+  tossWinner?: string; 
+  tossChoice?: string; 
+  result?: string; 
+  target?: number; 
+  rrr?: string; 
+  currentInnings?: string; 
+  venue?: string; 
+  date?: string; 
+  time?: string; 
+  commentary?: any[];
+  batting?: any[];
+  bowling?: any[];
+}; 
