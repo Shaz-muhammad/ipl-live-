@@ -6,17 +6,17 @@ import { useEffect, useMemo, useState } from "react";
 interface Props {
   open: boolean;
   onClose: () => void;
-  matchIds: string[];
+  matchIds?: string[];
 }
 
-export function WatchLiveModal({ open, onClose, matchIds }: Props) {
+export function WatchLiveModal({ open, onClose }: Props) {
   const [linksByMatchId, setLinksByMatchId] = useState<
     Record<string, string[]>
   >({});
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!open || !matchIds || matchIds.length === 0) {
+    if (!open) {
       setLinksByMatchId({});
       return;
     }
@@ -24,38 +24,25 @@ export function WatchLiveModal({ open, onClose, matchIds }: Props) {
     let cancelled = false;
     setLoading(true);
 
-    Promise.all(
-      matchIds.map(async (matchId) => {
-        try {
-          console.log(`📡 Fetching links for matchId: ${matchId}`);
-          const res = await api.get(
-            `/admin/links/${encodeURIComponent(matchId)}`,
-          );
-          console.log(`✅ Fetched for ${matchId}:`, res.data);
-          return {
-            matchId,
-            links: Array.isArray(res.data?.links) ? res.data.links : [],
-          };
-        } catch (err) {
-          console.error(`❌ Error fetching links for ${matchId}:`, err);
-          return {
-            matchId,
-            links: [],
-          };
-        }
-      }),
-    )
-      .then((results) => {
+    // Fetch all available streaming links from the backend
+    api.get("/admin/all-links")
+      .then((res) => {
         if (cancelled) return;
 
+        const docs = Array.isArray(res.data) ? res.data : [];
         const grouped: Record<string, string[]> = {};
-        results.forEach((item) => {
-          if (item.links.length > 0) {
-            grouped[item.matchId] = item.links;
+        
+        docs.forEach((doc: any) => {
+          if (doc.matchId && Array.isArray(doc.links) && doc.links.length > 0) {
+            grouped[doc.matchId] = doc.links;
           }
         });
 
+        console.log("📺 All live links loaded:", grouped);
         setLinksByMatchId(grouped);
+      })
+      .catch((err) => {
+        console.error("❌ Error fetching all links:", err);
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -64,7 +51,7 @@ export function WatchLiveModal({ open, onClose, matchIds }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [open, matchIds]);
+  }, [open]);
 
   const groupedEntries = useMemo(
     () => Object.entries(linksByMatchId),

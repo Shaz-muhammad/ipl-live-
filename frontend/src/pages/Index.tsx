@@ -92,12 +92,6 @@ const Index = () => {
   };
 
   const openWatchLive = () => {
-    // Collect all match IDs from the live matches array.
-    // We use match.apiId || match.id to ensure consistency with admin saving.
-    const relevantMatchIds = liveMatches.map((match) => match.id);
-
-    console.log("📺 Opening Watch Live for matchIds:", relevantMatchIds);
-    setSelectedMatchIds(relevantMatchIds);
     setShowWatchLive(true);
   };
 
@@ -188,7 +182,6 @@ const Index = () => {
       </div>
 
       <WatchLiveModal
-        matchIds={selectedMatchIds}
         open={showWatchLive}
         onClose={() => setShowWatchLive(false)}
       />

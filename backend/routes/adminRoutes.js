@@ -64,7 +64,18 @@ router.get("/links", requireAdminAuth, async (req, res) => {
   }
 });
 
-// Public endpoint so users can open the "Watch Live" modal.
+// Public endpoint to get all matches that have streaming links
+router.get("/all-links", async (req, res) => {
+  try {
+    const docs = await MatchLinks.find({ links: { $not: { $size: 0 } } }).sort({ updatedAt: -1 });
+    return res.json(docs);
+  } catch (err) {
+    console.error("❌ Fetch all links error:", err);
+    return res.status(500).json({ error: "Failed to fetch links" });
+  }
+});
+
+// Public endpoint so users can open the "Watch Live" modal for a specific match.
 router.get("/links/:matchId", async (req, res) => {
   try {
     const { matchId } = req.params;
