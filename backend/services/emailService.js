@@ -1,15 +1,12 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
 /**
- * Sends contact emails using Nodemailer.
+ * Sends contact emails using Resend API.
  * Returns granular status for each email.
  */
 export async function sendContactEmails({ name, email, subject, message }) {
   const {
-    SMTP_HOST,
-    SMTP_PORT,
-    SMTP_USER,
-    SMTP_PASS,
+    RESEND_API_KEY,
     SUPPORT_EMAIL = "ipl.live1003@gmail.com",
   } = process.env;
 
@@ -19,40 +16,19 @@ export async function sendContactEmails({ name, email, subject, message }) {
     error: null
   };
 
-  if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) {
-    console.error("❌ SMTP configuration missing in .env");
-    status.error = "SMTP not configured";
+  if (!RESEND_API_KEY) {
+    console.error("❌ RESEND_API_KEY configuration missing in .env");
+    status.error = "Email service not configured";
     return status;
   }
 
-  const transporter = nodemailer.createTransport({
-    host: SMTP_HOST || "smtp.gmail.com",
-    port: Number(SMTP_PORT || 465),
-    secure: Number(SMTP_PORT || 465) === 465,
-    auth: {
-      user: SMTP_USER,
-      pass: SMTP_PASS,
-    },
-    connectionTimeout: 10000, 
-    greetingTimeout: 10000, 
-    socketTimeout: 10000, 
-  });
+  const resend = new Resend(RESEND_API_KEY);
 
   try {
-    // 1. Verify connection explicitly before sending
-    console.log(`📡 Verifying SMTP connection to ${SMTP_HOST || "smtp.gmail.com"}:${SMTP_PORT || 465}...`);
-    try {
-      await transporter.verify();
-      console.log("✅ SMTP connection verified");
-    } catch (verifyErr) {
-      console.error("❌ SMTP Verification Failed:", verifyErr.message);
-      status.error = `SMTP connection failed: ${verifyErr.message}`;
-      return status;
-    }
-
-    // 2. Send notification to Support (MANDATORY for 'success')
-    const adminMailOptions = {
-      from: `"IPL LIVE Support" <${SMTP_USER}>`,
+    // 1. Send notification to Support (MANDATORY for 'success')
+    console.log(`📡 Sending support email to ${SUPPORT_EMAIL} via Resend...`);
+    const { data: supportData, error: supportError } = await resend.emails.send({
+      from: "IPL LIVE Support <onboarding@resend.dev>",
       to: SUPPORT_EMAIL,
       subject: `New Support Request: ${subject}`,
       html: `
@@ -67,51 +43,55 @@ export async function sendContactEmails({ name, email, subject, message }) {
           <p style="font-size: 12px; color: #888;">Submitted via IPL LIVE Futuristic Platform</p>
         </div>
       `,
-    };
+    });
 
-    try {
-      await transporter.sendMail(adminMailOptions);
-      status.supportEmailSent = true;
-      console.log(`✅ Support email sent to ${SUPPORT_EMAIL}`);
-    } catch (err) {
-      console.error("❌ Support email failed:", err.message);
-      status.error = `Support email failed: ${err.message}`;
-      return status; // Stop here if support email fails
+    if (supportError) {
+      console.error("❌ Support email failed:", supportError.message);
+      status.error = `Support email failed: ${supportError.message}`;
+      return status;
     }
 
-    // 3. Send confirmation to User (OPTIONAL for 'success')
-    const userMailOptions = {
-      from: `"IPL LIVE Support" <${SMTP_USER}>`,
-      to: email,
-      subject: `We've received your message: ${subject}`,
-      html: `
-        <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
-          <h2 style="color: #00f2ff;">Hello ${name},</h2>
-          <p>Thank you for reaching out to IPL LIVE Support. We have received your message regarding "<strong>${subject}</strong>".</p>
-          <p>Our team will review your inquiry and get back to you as soon as possible.</p>
-          <div style="background: #f9f9f9; padding: 15px; border-radius: 5px; margin-top: 10px;">
-            <p style="font-style: italic; color: #555;">"Your message: ${message.substring(0, 100)}${message.length > 100 ? '...' : ''}"</p>
-          </div>
-          <p>Best regards,<br/>The IPL LIVE Team</p>
-          <hr style="margin-top: 20px; border: 0; border-top: 1px solid #eee;" />
-          <p style="font-size: 12px; color: #888;">This is an automated response. Please do not reply to this email.</p>
-        </div>
-      `,
-    };
+    status.supportEmailSent = true;
+    console.log(`✅ Support email sent successfully: ${supportData.id}`);
 
+    // 2. Send confirmation to User (OPTIONAL for 'success')
+    // Note: Resend free tier might limit sending to non-verified emails.
+    // We attempt it but don't fail the whole process if it fails.
     try {
-      await transporter.sendMail(userMailOptions);
-      status.confirmationEmailSent = true;
-      console.log(`✅ Confirmation email sent to ${email}`);
+      console.log(`📡 Sending confirmation email to ${email} via Resend...`);
+      const { error: userError } = await resend.emails.send({
+        from: "IPL LIVE Support <onboarding@resend.dev>",
+        to: email,
+        subject: `We've received your message: ${subject}`,
+        html: `
+          <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+            <h2 style="color: #00f2ff;">Hello ${name},</h2>
+            <p>Thank you for reaching out to IPL LIVE Support. We have received your message regarding "<strong>${subject}</strong>".</p>
+            <p>Our team will review your inquiry and get back to you as soon as possible.</p>
+            <div style="background: #f9f9f9; padding: 15px; border-radius: 5px; margin-top: 10px;">
+              <p style="font-style: italic; color: #555;">"Your message: ${message.substring(0, 100)}${message.length > 100 ? '...' : ''}"</p>
+            </div>
+            <p>Best regards,<br/>The IPL LIVE Team</p>
+            <hr style="margin-top: 20px; border: 0; border-top: 1px solid #eee;" />
+            <p style="font-size: 12px; color: #888;">This is an automated response. Please do not reply to this email.</p>
+          </div>
+        `,
+      });
+
+      if (!userError) {
+        status.confirmationEmailSent = true;
+        console.log(`✅ Confirmation email sent to ${email}`);
+      } else {
+        console.warn("⚠️ Confirmation email skipped/failed:", userError.message);
+      }
     } catch (err) {
-      console.warn("⚠️ Confirmation email failed (continuing as success):", err.message);
-      // We don't return here because support already received the message
+      console.warn("⚠️ Confirmation email exception:", err.message);
     }
 
     return status;
-  } catch (error) {
-    console.error("❌ SMTP Error:", error.message);
-    status.error = error.message;
+  } catch (err) {
+    console.error("❌ Unexpected Email Service Error:", err.message);
+    status.error = err.message;
     return status;
   }
 }
