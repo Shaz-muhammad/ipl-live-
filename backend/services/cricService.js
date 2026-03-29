@@ -18,6 +18,18 @@ export function getPollInterval(hasLiveMatch) {
   return hasLiveMatch ? LIVE_POLL_INTERVAL : STANDBY_POLL_INTERVAL;
 }
 
+export function getApiStatus(mergedMatches = []) {
+  const now = Date.now();
+  const hasLiveMatch = mergedMatches.some((m) => m.status === "live");
+
+  if (hasLiveMatch) return "live";
+  if (now < blockedUntil) return "paused";
+  if (mergedMatches.length === 0) return "unavailable";
+  
+  // If we have data but no live matches, it's "no-match"
+  return "no-match";
+}
+
 export function getCurrentPollingMode() {
   return currentPollingMode;
 }

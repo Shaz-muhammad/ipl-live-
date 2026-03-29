@@ -28,6 +28,7 @@ const Index = () => {
 
   const [cricMatches, setCricMatches] = useState<MergedMatch[]>([]);
   const [lastValidMatches, setLastValidMatches] = useState<MergedMatch[]>([]);
+  const [apiStatus, setApiStatus] = useState<"live" | "no-match" | "paused" | "unavailable">("live");
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
 
@@ -43,14 +44,27 @@ const Index = () => {
       console.log("✅ Connected to backend");
     });
 
-    const onLiveScores = (data: MergedMatch[]) => {
-      console.log("🔥 Live data received:", data);
+    const onLiveScores = (response: { apiStatus: any; data: MergedMatch[] } | MergedMatch[]) => {
+      console.log("🔥 Live data received:", response);
 
+      let status: any = "live";
+      let data: MergedMatch[] = [];
+
+      if (Array.isArray(response)) {
+        data = response;
+      } else if (response && typeof response === "object") {
+        status = response.apiStatus || "live";
+        data = response.data || [];
+      }
+
+      setApiStatus(status);
+      
       if (data && data.length > 0) {
         setCricMatches(data);
         setLastValidMatches(data);
       } else {
-        console.log("⚠️ Empty response, keeping previous data");
+        console.log("⚠️ Empty response data");
+        setCricMatches([]);
       }
 
       setIsLoading(false);
@@ -124,14 +138,6 @@ const Index = () => {
           </div>
         )}
 
-        {!isLoading && matches.length === 0 && (
-          <div className="text-center py-6">
-            <p className="text-sm text-muted-foreground">
-              No IPL live match currently
-            </p>
-          </div>
-        )}
-
         {heroMatch ? (
           <>
             <section>
@@ -161,12 +167,25 @@ const Index = () => {
         ) : (
           !isLoading && (
             <div className="text-center py-20 glass-card rounded-2xl border border-border/50">
-              <p className="text-lg font-heading font-bold text-muted-foreground">
-                No IPL live match currently
-              </p>
-              <p className="text-xs text-muted-foreground/60 mt-2">
-                Stay tuned for upcoming live action!
-              </p>
+              {apiStatus === "paused" || apiStatus === "unavailable" ? (
+                <>
+                  <p className="text-lg font-heading font-bold text-muted-foreground">
+                    Live score temporarily unavailable
+                  </p>
+                  <p className="text-xs text-muted-foreground/60 mt-2">
+                    Please check again in a few minutes
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-lg font-heading font-bold text-muted-foreground">
+                    No IPL live match currently
+                  </p>
+                  <p className="text-xs text-muted-foreground/60 mt-2">
+                    Stay tuned for upcoming live action!
+                  </p>
+                </>
+              )}
             </div>
           )
         )}

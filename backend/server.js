@@ -9,7 +9,7 @@ import bcrypt from "bcrypt";
 import adminRoutes from "./routes/adminRoutes.js";
 import cricRoutes from "./routes/cricRoutes.js";
 import blogRoutes from "./routes/blogRoutes.js";
-import { fetchScores, setCurrentPollingMode, getPollInterval, isMatchLive } from "./services/cricService.js";
+import { fetchScores, setCurrentPollingMode, getPollInterval, isMatchLive, getApiStatus } from "./services/cricService.js";
 import { getIplSchedule } from "./services/scheduleService.js";
 import { Admin } from "./models/Admin.js";
 import { resolveTeam } from "./services/teamMap.js";
@@ -272,9 +272,10 @@ async function start() {
         const mergedMatches = mergeScheduleWithLive(schedule, liveMatches);
 
         latestMatches = mergedMatches;
+        const apiStatus = getApiStatus(mergedMatches);
 
         // Emit to all clients
-        io.emit("liveScores", latestMatches);
+        io.emit("liveScores", { apiStatus, data: latestMatches });
 
         // Update polling mode based on live match status
         const hasLiveMatch = mergedMatches.some((m) => m.status === "live");
@@ -293,14 +294,16 @@ async function start() {
       } catch (err) {
         console.error("❌ [POLL] Socket poll error:", err?.message ?? err);
         // Fallback: emit last known matches even if fetch failed
-        io.emit("liveScores", latestMatches);
+        const apiStatus = getApiStatus(latestMatches);
+        io.emit("liveScores", { apiStatus, data: latestMatches });
       }
     }
 
     io.on("connection", (socket) => {
       console.log("⚡ [SOCKET] Client connected:", socket.id);
       // On connection, send cached data only. Do NOT trigger fetch per user.
-      socket.emit("liveScores", latestMatches);
+      const apiStatus = getApiStatus(latestMatches);
+      socket.emit("liveScores", { apiStatus, data: latestMatches });
 
       socket.on("disconnect", () => {
         console.log("❌ [SOCKET] Client disconnected:", socket.id);
