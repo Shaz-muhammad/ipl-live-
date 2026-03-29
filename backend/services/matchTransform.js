@@ -104,28 +104,33 @@ export function buildMatchDetails({ matchId, matchInfoRaw, matchScorecardRaw }) 
   // 📈 Calculate Target & RRR
   let target = 0;
   let rrr = "0";
+  let crr = "0";
   let currentInnings = "";
 
   const scoreArr = asArray(matchInfo?.score);
-  if (scoreArr.length === 1) {
-    currentInnings = "1st Innings";
-  } else if (scoreArr.length === 2) {
-    currentInnings = "2nd Innings";
-    // Target is usually 1st innings runs + 1
-    const firstInnings = scoreArr[0];
-    const firstRuns = Number(firstInnings?.r ?? firstInnings?.R ?? 0);
-    target = firstRuns + 1;
-
-    // Calculate RRR
-    const secondInnings = scoreArr[1];
-    const secondRuns = Number(secondInnings?.r ?? secondInnings?.R ?? 0);
-    const secondOvers = Number(secondInnings?.o ?? secondInnings?.O ?? 0);
-    const runsRemaining = target - secondRuns;
-    const totalOvers = 20; // Assume T20/IPL
-    const oversRemaining = totalOvers - secondOvers;
+  if (scoreArr.length >= 1) {
+    const activeInnings = scoreArr[scoreArr.length - 1];
+    const activeRuns = Number(activeInnings?.r ?? activeInnings?.R ?? 0);
+    const activeOvers = Number(activeInnings?.o ?? activeInnings?.O ?? 0);
     
-    if (oversRemaining > 0 && runsRemaining > 0) {
-      rrr = (runsRemaining / oversRemaining).toFixed(2);
+    if (activeOvers > 0) {
+      crr = (activeRuns / activeOvers).toFixed(2);
+    }
+    
+    currentInnings = scoreArr.length === 1 ? "1st Innings" : "2nd Innings";
+    
+    if (scoreArr.length === 2) {
+      const firstInnings = scoreArr[0];
+      const firstRuns = Number(firstInnings?.r ?? firstInnings?.R ?? 0);
+      target = firstRuns + 1;
+
+      const runsRemaining = target - activeRuns;
+      const totalOvers = 20; 
+      const oversRemaining = totalOvers - activeOvers;
+      
+      if (oversRemaining > 0 && runsRemaining > 0) {
+        rrr = (runsRemaining / oversRemaining).toFixed(2);
+      }
     }
   }
 
@@ -211,10 +216,14 @@ export function buildMatchDetails({ matchId, matchInfoRaw, matchScorecardRaw }) 
     id: String(matchId),
     team1,
     team2,
+    team1Logo: team1?.logo || "🏏",
+    team2Logo: team2?.logo || "🏏",
     team1Score: team1Score ?? "",
     team2Score: team2Score ?? "",
     team1Overs: team1Overs ?? "",
     team2Overs: team2Overs ?? "",
+    score: team1Score || team2Score ? `${team1Score} vs ${team2Score}` : "—", // Aggregated score string
+    overs: team1Overs || team2Overs ? `${team1Overs} / ${team2Overs}` : "—",
     status,
     statusText: String(statusText ?? ""),
     tossWinner: String(tossWinner ?? ""),
@@ -222,9 +231,13 @@ export function buildMatchDetails({ matchId, matchInfoRaw, matchScorecardRaw }) 
     result: String(result ?? ""),
     target: Number(target || 0),
     rrr: String(rrr || "0"),
+    requiredRunRate: String(rrr || "0"),
+    crr: String(crr || "0"),
+    currentRunRate: String(crr || "0"),
     currentInnings: String(currentInnings || ""),
     venue: String(venue ?? ""),
     date: String(date ?? ""),
+    matchState: String(status === "live" ? "In Progress" : status === "finished" ? "Completed" : "Scheduled"),
     batting,
     bowling,
     commentary,

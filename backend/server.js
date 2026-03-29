@@ -53,11 +53,28 @@ function mergeScheduleWithLive(schedule, liveMatches) {
     const live = liveMatches.find((m) => teamsMatch(fixture, m));
 
     if (live) {
+      // Basic normalization for live matches from CricAPI
+      const team1 = resolveTeam(fixture.homeTeam);
+      const team2 = resolveTeam(fixture.awayTeam);
+      const team1ScoreObj = (live.score || []).find(s => s.inning.toLowerCase().includes(fixture.homeTeam.toLowerCase())) || {};
+      const team2ScoreObj = (live.score || []).find(s => s.inning.toLowerCase().includes(fixture.awayTeam.toLowerCase())) || {};
+      
+      const team1Score = team1ScoreObj.r ? `${team1ScoreObj.r}/${team1ScoreObj.w}` : "";
+      const team2Score = team2ScoreObj.r ? `${team2ScoreObj.r}/${team2ScoreObj.w}` : "";
+
       return {
         ...fixture,
+        id: live.id || fixture.id,
         apiId: live.id,
-        teams: live.teams || [fixture.homeTeam, fixture.awayTeam],
-        score: live.score || [],
+        team1,
+        team2,
+        team1Logo: team1?.logo || "🏏",
+        team2Logo: team2?.logo || "🏏",
+        team1Score,
+        team2Score,
+        team1Overs: team1ScoreObj.o || "",
+        team2Overs: team2ScoreObj.o || "",
+        score: team1Score || team2Score ? `${team1Score} vs ${team2Score}` : "—",
         status: live.matchEnded ? "finished" : "live",
         statusText: live.status || "Live",
         matchStarted: !!live.matchStarted,
@@ -68,30 +85,45 @@ function mergeScheduleWithLive(schedule, liveMatches) {
         result: live.matchEnded ? live.status : "",
         target: live.score && live.score.length === 2 ? Number(live.score[0]?.r || live.score[0]?.R || 0) + 1 : 0,
         currentInnings: live.score ? (live.score.length === 2 ? "2nd Innings" : "1st Innings") : "",
+        matchState: live.matchEnded ? "Completed" : "In Progress",
       };
     }
 
     const fixtureDateTime = new Date(`${fixture.dateRaw}T${fixture.timeRaw}:00+05:30`);
 
     if (fixtureDateTime > now) {
+      const team1 = resolveTeam(fixture.homeTeam);
+      const team2 = resolveTeam(fixture.awayTeam);
       return {
         ...fixture,
+        team1,
+        team2,
+        team1Logo: team1?.logo || "🏏",
+        team2Logo: team2?.logo || "🏏",
         status: "upcoming",
         statusText: `Starts at ${fixture.time} IST`,
-        score: [],
+        score: "—",
         teams: [fixture.homeTeam, fixture.awayTeam],
         venue: fixture.venue,
+        matchState: "Scheduled",
       };
     }
 
+    const team1 = resolveTeam(fixture.homeTeam);
+    const team2 = resolveTeam(fixture.awayTeam);
     return {
       ...fixture,
+      team1,
+      team2,
+      team1Logo: team1?.logo || "🏏",
+      team2Logo: team2?.logo || "🏏",
       status: "finished",
       statusText: fixture.statusText || "Match completed",
-      score: [],
+      score: "—",
       teams: [fixture.homeTeam, fixture.awayTeam],
       venue: fixture.venue,
       result: fixture.statusText || "",
+      matchState: "Completed",
     };
   });
 
@@ -182,7 +214,7 @@ async function start() {
 
     async function pollAndEmit() {
       try {
-        console.log("📡 Fetching live matches from CricAPI...");
+        // Use the rate-limited cached service
         const liveData = await fetchCurrentMatches();
         const liveMatches = Array.isArray(liveData?.data) ? liveData.data : [];
 
@@ -191,9 +223,11 @@ async function start() {
 
         latestMatches = mergedMatches;
 
-        console.log(
-          `🏏 Matches updated: Live(${mergedMatches.filter((m) => m.status === "live").length}), Upcoming(${mergedMatches.filter((m) => m.status === "upcoming").length}), Finished(${mergedMatches.filter((m) => m.status === "finished").length})`,
-        );
+        if (!liveData.fromCache) {
+          console.log(
+            `🏏 [FRESH] Matches updated: Live(${mergedMatches.filter((m) => m.status === "live").length}), Upcoming(${mergedMatches.filter((m) => m.status === "upcoming").length}), Finished(${mergedMatches.filter((m) => m.status === "finished").length})`,
+          );
+        }
 
         io.emit("liveScores", latestMatches);
       } catch (err) {
@@ -211,10 +245,12 @@ async function start() {
       });
     });
 
-    setTimeout(() => pollAndEmit(), 500);
+    // Initial fetch after short delay
+    setTimeout(() => pollAndEmit(), 1000);
 
-    const intervalMs = Number(process.env.LIVE_POLL_INTERVAL_MS ?? 7000);
-    setInterval(pollAndEmit, intervalMs);
+    // STRICT: Only one global polling loop, every 20-30 seconds
+    const POLL_INTERVAL = 20000; // 20 seconds
+    setInterval(pollAndEmit, POLL_INTERVAL);
 
     server.listen(PORT, () => {
       console.log(`🚀 Backend running on http://localhost:${PORT}`);

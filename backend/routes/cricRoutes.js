@@ -5,7 +5,7 @@ const router = express.Router();
 
 router.get("/live-scores", async (req, res) => {
   try {
-    const data = await fetchCurrentMatches();
+    const { data } = await fetchCurrentMatches();
     return res.json(data);
   } catch (err) {
     return res.status(500).json({ error: "Failed to fetch live scores" });
