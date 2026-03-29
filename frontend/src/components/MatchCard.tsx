@@ -2,33 +2,37 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { LiveBadge } from "./LiveBadge";
 
-// ✅ Define types locally (temporary clean fix)
-export interface Team {
-  id: string;
-  name: string;
-  shortName: string;
-  logo: string;
-  primaryColor: string;
-  secondaryColor: string;
-}
-
 export interface Match {
   id: string;
   apiId?: string;
-  team1: Team;
-  team2: Team;
-  team1Score: string;
-  team2Score: string;
-  status: "live" | "upcoming" | "finished";
-  statusText: string;
+
+  team1: string;
+  team2: string;
+
+  team1Short?: string;
+  team2Short?: string;
+
+  team1Logo?: string;
+  team2Logo?: string;
+
+  team1Score?: string;
+  team2Score?: string;
+
+  team1Overs?: string;
+  team2Overs?: string;
+
+  status?: string;
+  matchState?: string;
+
   tossWinner?: string;
   tossChoice?: string;
   result?: string;
   target?: number;
   rrr?: string;
   currentInnings?: string;
-  venue: string;
-  date: string;
+
+  venue?: string;
+  date?: string;
   time?: string;
 }
 
@@ -41,9 +45,24 @@ interface Props {
 export function MatchCard({ match, index, onTeamClick }: Props) {
   const navigate = useNavigate();
 
-  if (!match) return null; // ✅ safety
+  if (!match) return null;
 
-  const isLive = match.status === "live";
+  const state = match.matchState?.toLowerCase() || "";
+  const statusText = match.status?.toLowerCase() || "";
+
+  const isLive =
+    state.includes("progress") ||
+    statusText.includes("need") ||
+    statusText.includes("opt") ||
+    Boolean(match.team1Score) ||
+    Boolean(match.team2Score);
+
+  const isFinished = state === "complete" || statusText.includes("won by");
+
+  const displayStatus = isLive ? "live" : isFinished ? "finished" : "upcoming";
+
+  const team1Id = match.team1Short || match.team1;
+  const team2Id = match.team2Short || match.team2;
 
   return (
     <motion.div
@@ -61,14 +80,8 @@ export function MatchCard({ match, index, onTeamClick }: Props) {
         {isLive ? (
           <LiveBadge />
         ) : (
-          <span
-            className={`text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
-              match.status === "upcoming"
-                ? "bg-neon-blue/10 text-neon-blue"
-                : "bg-muted text-muted-foreground"
-            }`}
-          >
-            {match.status === "upcoming" ? "Upcoming" : "Finished"}
+          <span className="text-xs text-muted-foreground uppercase">
+            {displayStatus}
           </span>
         )}
 
@@ -86,19 +99,15 @@ export function MatchCard({ match, index, onTeamClick }: Props) {
             className="text-2xl cursor-pointer"
             onClick={(e) => {
               e.stopPropagation();
-              onTeamClick(
-                match.team1?.id,
-                match.team1?.primaryColor,
-                match.team1?.secondaryColor,
-              );
+              onTeamClick(team1Id, "#00ffff", "#0ea5e9");
             }}
           >
-            {match.team1?.logo || "🏏"}
+            {match.team1Logo || "🏏"}
           </motion.span>
 
           <div>
             <p className="font-heading font-bold text-sm text-foreground">
-              {match.team1?.shortName || "T1"}
+              {match.team1Short || match.team1 || "T1"}
             </p>
             <p className="font-display text-sm neon-text">
               {match.team1Score || "—"}
@@ -106,7 +115,6 @@ export function MatchCard({ match, index, onTeamClick }: Props) {
           </div>
         </div>
 
-        {/* VS */}
         <span className="font-display text-[10px] text-muted-foreground mx-2">
           VS
         </span>
@@ -115,7 +123,7 @@ export function MatchCard({ match, index, onTeamClick }: Props) {
         <div className="flex items-center gap-3 flex-1 justify-end text-right">
           <div>
             <p className="font-heading font-bold text-sm text-foreground">
-              {match.team2?.shortName || "T2"}
+              {match.team2Short || match.team2 || "T2"}
             </p>
             <p className="font-display text-sm neon-text">
               {match.team2Score || "—"}
@@ -127,43 +135,35 @@ export function MatchCard({ match, index, onTeamClick }: Props) {
             className="text-2xl cursor-pointer"
             onClick={(e) => {
               e.stopPropagation();
-              onTeamClick(
-                match.team2?.id,
-                match.team2?.primaryColor,
-                match.team2?.secondaryColor,
-              );
+              onTeamClick(team2Id, "#a855f7", "#ec4899");
             }}
           >
-            {match.team2?.logo || "🏏"}
+            {match.team2Logo || "🏏"}
           </motion.span>
         </div>
       </div>
 
-      {/* Match Meta Information */}
+      {/* Match Info */}
       <div className="mt-4 space-y-2">
-        {match.status === "finished" && match.result && (
-          <p className="text-xs font-bold text-center neon-text uppercase tracking-wider animate-pulse">
+        {displayStatus === "finished" && match.result && (
+          <p className="text-xs font-bold text-center neon-text uppercase">
             {match.result}
           </p>
         )}
 
-        {match.status === "live" && match.currentInnings === "2nd Innings" && match.target && (
-          <p className="text-[10px] text-center neon-text-accent font-bold uppercase tracking-widest">
-            Target: {match.target} {match.rrr && match.rrr !== "0" && `• RRR: ${match.rrr}`}
+        {isLive && match.status && (
+          <p className="text-[10px] text-center neon-text-accent font-bold uppercase">
+            {match.status}
           </p>
         )}
 
-        {match.status === "live" && match.tossWinner && match.tossChoice && (
+        {match.tossWinner && match.tossChoice && (
           <p className="text-[10px] text-center text-muted-foreground italic">
-            {match.tossWinner} won the toss and elected to {match.tossChoice} first.
+            {match.tossWinner} won the toss and elected to {match.tossChoice}
           </p>
         )}
 
-        <p className="text-xs text-center text-muted-foreground font-heading border-t border-border/20 pt-2">
-          {match.status === "upcoming" ? "Match not started" : (match.statusText || "Match info unavailable")}
-        </p>
-
-        <p className="text-[10px] text-center text-muted-foreground opacity-70">
+        <p className="text-xs text-center text-muted-foreground border-t pt-2">
           {match.venue || "Unknown venue"}
         </p>
       </div>

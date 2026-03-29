@@ -8,40 +8,65 @@ import { Footer } from "@/components/Footer";
 import { WatchLiveModal } from "@/components/WatchLiveModal";
 import { AdminPanel } from "@/components/AdminPanel";
 import { useTeamTheme } from "@/hooks/useTeamTheme";
-import {
-  type Match,
-  type MergedMatch,
-  transformCricAPIMatches,
-} from "@/lib/transformCricAPI";
 import { connectSocket } from "@/services/socket";
-
-type MatchWithState = Match & {
-  matchState?: string;
-};
 
 type ApiStatus = "live" | "no-match" | "paused" | "unavailable";
 
+type LiveMatch = {
+  id: string;
+  apiId?: string;
+
+  team1: string;
+  team2: string;
+
+  team1Short?: string;
+  team2Short?: string;
+
+  team1Logo?: string;
+  team2Logo?: string;
+
+  team1Score?: string;
+  team2Score?: string;
+
+  team1Overs?: string;
+  team2Overs?: string;
+
+  status?: string;
+  matchState?: string;
+
+  tossWinner?: string;
+  tossChoice?: string;
+  result?: string;
+  target?: number;
+  rrr?: string;
+  currentInnings?: string;
+
+  venue?: string;
+  date?: string;
+  time?: string;
+
+  commentary?: unknown[];
+};
+
 type LiveScoreResponse = {
   apiStatus: ApiStatus;
-  data: MergedMatch[];
+  data: LiveMatch[];
 };
 
 const Index = () => {
   const [showWatchLive, setShowWatchLive] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
-  const [, setSelectedMatchIds] = useState<string[]>([]);
 
   const { setTeamTheme, resetTheme } = useTeamTheme();
 
-  const [cricMatches, setCricMatches] = useState<MergedMatch[]>([]);
-  const [lastValidMatches, setLastValidMatches] = useState<MergedMatch[]>([]);
+  const [cricMatches, setCricMatches] = useState<LiveMatch[]>([]);
+  const [lastValidMatches, setLastValidMatches] = useState<LiveMatch[]>([]);
   const [apiStatus, setApiStatus] = useState<ApiStatus>("live");
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
 
-  const matches: Match[] = useMemo(() => {
-    const source = cricMatches.length > 0 ? cricMatches : lastValidMatches;
-    return transformCricAPIMatches(source);
+  const matches = useMemo<LiveMatch[]>(() => {
+    return cricMatches.length > 0 ? cricMatches : lastValidMatches;
   }, [cricMatches, lastValidMatches]);
 
   useEffect(() => {
@@ -51,29 +76,24 @@ const Index = () => {
       console.log("✅ Connected to backend");
     });
 
-    const onLiveScores = (response: LiveScoreResponse | MergedMatch[]) => {
+    const onLiveScores = (response: LiveScoreResponse | LiveMatch[]) => {
       console.log("SOCKET PAYLOAD:", response);
 
       let status: ApiStatus = "live";
-      let data: MergedMatch[] = [];
+      let data: LiveMatch[] = [];
 
       if (Array.isArray(response)) {
         data = response;
       } else if (response && typeof response === "object") {
-        status = response.apiStatus || "live";
-        data = response.data || [];
+        status = response.apiStatus ?? "live";
+        data = response.data ?? [];
       }
 
       setApiStatus(status);
+      setCricMatches(data);
 
       if (data.length > 0) {
-        setCricMatches(data);
         setLastValidMatches(data);
-      } else {
-        console.log("⚠️ Empty response data");
-        if (lastValidMatches.length === 0) {
-          setCricMatches([]);
-        }
       }
 
       setIsLoading(false);
@@ -98,29 +118,23 @@ const Index = () => {
   }, []);
 
   const liveMatches = useMemo(() => {
-    const live = (matches || []).filter((m) => {
-      const match = m as MatchWithState;
-      const status = match?.status?.toLowerCase() || "";
-      const state = match?.matchState?.toLowerCase() || "";
+    return (matches || []).filter((m) => {
+      const state = m.matchState?.toLowerCase() || "";
+      const status = m.status?.toLowerCase() || "";
 
       return (
+        state.includes("progress") ||
         state === "live" ||
-        state === "in progress" ||
-        state === "inprogress" ||
-        status.includes("live") ||
         status.includes("need") ||
-        status.includes("opt to bat") ||
+        status.includes("opt") ||
         status.includes("won toss") ||
-        Boolean(match?.team1Score) ||
-        Boolean(match?.team2Score)
+        Boolean(m.team1Score) ||
+        Boolean(m.team2Score)
       );
     });
-    console.log("MATCHES STATE:", matches);
-    console.log("LIVE MATCHES:", live);
-    return live;
   }, [matches]);
 
-  const heroMatch = liveMatches[0];
+  const heroMatch = liveMatches.length > 0 ? liveMatches[0] : undefined;
 
   const handleTeamClick = (
     teamId: string,

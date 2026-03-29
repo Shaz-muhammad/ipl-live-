@@ -2,34 +2,35 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { LiveBadge } from "./LiveBadge";
 
-// ✅ Define Match type locally (temporary fix)
-export interface Team {
-  id: string;
-  name: string;
-  shortName: string;
-  logo: string;
-  primaryColor: string;
-  secondaryColor: string;
-}
-
 export interface Match {
   id: string;
   apiId?: string;
-  team1: Team;
-  team2: Team;
-  team1Score: string;
-  team2Score: string;
-  team1Overs: string;
-  team2Overs: string;
-  status: "live" | "upcoming" | "finished";
-  statusText: string;
+
+  team1: string;
+  team2: string;
+
+  team1Short?: string;
+  team2Short?: string;
+
+  team1Logo?: string;
+  team2Logo?: string;
+
+  team1Score?: string;
+  team2Score?: string;
+
+  team1Overs?: string;
+  team2Overs?: string;
+
+  status?: string;
+  matchState?: string;
+
   tossWinner?: string;
   tossChoice?: string;
   result?: string;
   target?: number;
   rrr?: string;
   currentInnings?: string;
-  venue: string;
+  venue?: string;
   date?: string;
   time?: string;
 }
@@ -42,7 +43,37 @@ interface Props {
 export function HeroMatchCard({ match, onTeamClick }: Props) {
   const navigate = useNavigate();
 
-  if (!match) return null; // ✅ safety
+  if (!match) return null;
+
+  const state = match.matchState?.toLowerCase() || "";
+  const statusText = match.status || "";
+  const lowerStatus = statusText.toLowerCase();
+
+  const isLive =
+    state.includes("progress") ||
+    state === "live" ||
+    lowerStatus.includes("need") ||
+    lowerStatus.includes("opt") ||
+    lowerStatus.includes("won toss") ||
+    Boolean(match.team1Score) ||
+    Boolean(match.team2Score);
+
+  const isFinished =
+    state === "complete" ||
+    state === "completed" ||
+    lowerStatus.includes("won by") ||
+    lowerStatus.includes("match tied") ||
+    lowerStatus.includes("no result");
+
+  const displayStatus = isLive ? "live" : isFinished ? "finished" : "upcoming";
+
+  const team1Id = match.team1Short || match.team1;
+  const team2Id = match.team2Short || match.team2;
+
+  const team1Primary = "#00ffff";
+  const team1Secondary = "#0ea5e9";
+  const team2Primary = "#a855f7";
+  const team2Secondary = "#ec4899";
 
   return (
     <motion.div
@@ -52,38 +83,34 @@ export function HeroMatchCard({ match, onTeamClick }: Props) {
       onClick={() => navigate(`/match/${match.apiId || match.id}`)}
       className="glass-card neon-border cursor-pointer p-6 md:p-8 max-w-2xl mx-auto"
     >
-      {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        {match.status === "live" ? (
+        {displayStatus === "live" ? (
           <LiveBadge />
         ) : (
-          <span className="text-xs text-muted-foreground">{match.status}</span>
+          <span className="text-xs text-muted-foreground">{displayStatus}</span>
         )}
+
         <span className="text-xs text-muted-foreground font-body">
-          {match.venue || "Unknown venue"} {match.date && `• ${match.date}`} {match.time && `• ${match.time}`}
+          {match.venue || "Unknown venue"}
+          {match.date ? ` • ${match.date}` : ""}
+          {match.time ? ` • ${match.time}` : ""}
         </span>
       </div>
 
-      {/* Teams */}
       <div className="flex items-center justify-between gap-4">
-        {/* Team 1 */}
         <motion.div
           whileHover={{ scale: 1.05 }}
           className="flex flex-col items-center gap-2 flex-1 cursor-pointer"
           onClick={(e) => {
             e.stopPropagation();
-            onTeamClick(
-              match.team1?.id,
-              match.team1?.primaryColor,
-              match.team1?.secondaryColor,
-            );
+            onTeamClick(team1Id, team1Primary, team1Secondary);
           }}
         >
           <span className="text-4xl md:text-5xl">
-            {match.team1?.logo || "🏏"}
+            {match.team1Logo || "🏏"}
           </span>
           <span className="font-heading text-lg font-bold text-foreground">
-            {match.team1?.shortName || "T1"}
+            {match.team1Short || match.team1 || "T1"}
           </span>
           <span className="font-display text-xl md:text-2xl neon-text font-bold">
             {match.team1Score || "—"}
@@ -95,31 +122,25 @@ export function HeroMatchCard({ match, onTeamClick }: Props) {
           )}
         </motion.div>
 
-        {/* VS */}
         <div className="flex flex-col items-center">
           <span className="font-display text-sm text-muted-foreground tracking-widest">
             VS
           </span>
         </div>
 
-        {/* Team 2 */}
         <motion.div
           whileHover={{ scale: 1.05 }}
           className="flex flex-col items-center gap-2 flex-1 cursor-pointer"
           onClick={(e) => {
             e.stopPropagation();
-            onTeamClick(
-              match.team2?.id,
-              match.team2?.primaryColor,
-              match.team2?.secondaryColor,
-            );
+            onTeamClick(team2Id, team2Primary, team2Secondary);
           }}
         >
           <span className="text-4xl md:text-5xl">
-            {match.team2?.logo || "🏏"}
+            {match.team2Logo || "🏏"}
           </span>
           <span className="font-heading text-lg font-bold text-foreground">
-            {match.team2?.shortName || "T2"}
+            {match.team2Short || match.team2 || "T2"}
           </span>
           <span className="font-display text-xl md:text-2xl neon-text font-bold">
             {match.team2Score || "—"}
@@ -132,9 +153,8 @@ export function HeroMatchCard({ match, onTeamClick }: Props) {
         </motion.div>
       </div>
 
-      {/* Status & Meta Info */}
       <div className="mt-6 space-y-3 text-center">
-        {match.status === "finished" && match.result && (
+        {displayStatus === "finished" && match.result && (
           <motion.p
             initial={{ scale: 0.9 }}
             animate={{ scale: 1 }}
@@ -144,25 +164,32 @@ export function HeroMatchCard({ match, onTeamClick }: Props) {
           </motion.p>
         )}
 
-        {match.status === "live" && match.currentInnings === "2nd Innings" && match.target && (
-          <div className="flex justify-center gap-4 text-[10px] md:text-xs font-bold neon-text-accent uppercase tracking-wider">
-            <span>Target: {match.target}</span>
-            {match.rrr && match.rrr !== "0" && <span>RRR: {match.rrr}</span>}
-          </div>
-        )}
+        {displayStatus === "live" &&
+          match.currentInnings === "2nd Innings" &&
+          match.target && (
+            <div className="flex justify-center gap-4 text-[10px] md:text-xs font-bold neon-text-accent uppercase tracking-wider">
+              <span>Target: {match.target}</span>
+              {match.rrr && match.rrr !== "0" && <span>RRR: {match.rrr}</span>}
+            </div>
+          )}
 
-        {match.status !== "upcoming" && match.tossWinner && match.tossChoice && (
-          <p className="text-xs text-muted-foreground italic font-body">
-            {match.tossWinner} won the toss and elected to {match.tossChoice} first.
-          </p>
-        )}
+        {displayStatus !== "upcoming" &&
+          match.tossWinner &&
+          match.tossChoice && (
+            <p className="text-xs text-muted-foreground italic font-body">
+              {match.tossWinner} won the toss and elected to {match.tossChoice}{" "}
+              first.
+            </p>
+          )}
 
         <motion.p
           className="text-sm font-heading font-semibold neon-text-accent"
           animate={{ opacity: [0.7, 1, 0.7] }}
           transition={{ duration: 2, repeat: Infinity }}
         >
-          {match.status === "upcoming" ? "Match not started" : (match.statusText || "Match info unavailable")}
+          {displayStatus === "upcoming"
+            ? "Match not started"
+            : statusText || "Match info unavailable"}
         </motion.p>
       </div>
     </motion.div>
