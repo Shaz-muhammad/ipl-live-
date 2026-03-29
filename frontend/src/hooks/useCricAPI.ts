@@ -1,3 +1,4 @@
+import { api } from "@/services/api";
 import { useQuery } from "@tanstack/react-query";
 
 export interface CricAPIMatch {
@@ -32,9 +33,6 @@ interface CricAPIResponse {
   data: CricAPIMatch[];
 }
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
-
 async function fetchFromBackend(
   endpoint: "currentMatches" | "matchInfo" | "matchScorecard",
   id?: string,
@@ -42,26 +40,17 @@ async function fetchFromBackend(
   let url = "";
 
   if (endpoint === "currentMatches") {
-    url = `${API_BASE_URL}/matches`;
+    url = `/live-scores`;
   } else if (endpoint === "matchInfo" && id) {
-    url = `${API_BASE_URL}/match/${encodeURIComponent(id)}`;
+    url = `/match/${encodeURIComponent(id)}`;
   } else if (endpoint === "matchScorecard" && id) {
-    url = `${API_BASE_URL}/match/${encodeURIComponent(id)}`;
+    url = `/match/${encodeURIComponent(id)}`;
   } else {
     throw new Error("Invalid endpoint or missing match id");
   }
 
-  const response = await fetch(url, {
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`Backend request failed: ${response.status}`);
-  }
-
-  const result = await response.json();
+  const response = await api.get(url);
+  const result = response.data;
 
   if (endpoint === "currentMatches") {
     return {

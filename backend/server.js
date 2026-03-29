@@ -9,7 +9,7 @@ import bcrypt from "bcrypt";
 import adminRoutes from "./routes/adminRoutes.js";
 import cricRoutes from "./routes/cricRoutes.js";
 import blogRoutes from "./routes/blogRoutes.js";
-import { fetchCurrentMatches } from "./services/cricService.js";
+import { fetchScores } from "./services/cricService.js";
 import { getIplSchedule } from "./services/scheduleService.js";
 import { Admin } from "./models/Admin.js";
 
@@ -211,11 +211,12 @@ async function start() {
     });
 
     let latestMatches = [];
+    let currentPollingInterval = 300000; // Default to standby (5m)
+    let pollTimer = null;
 
     async function pollAndEmit() {
       try {
-        // Use the rate-limited cached service
-        const liveData = await fetchCurrentMatches();
+        const liveData = await fetchScores();
         const liveMatches = Array.isArray(liveData?.data) ? liveData.data : [];
 
         const schedule = await getIplSchedule();
@@ -223,34 +224,38 @@ async function start() {
 
         latestMatches = mergedMatches;
 
-        if (!liveData.fromCache) {
-          console.log(
-            `🏏 [FRESH] Matches updated: Live(${mergedMatches.filter((m) => m.status === "live").length}), Upcoming(${mergedMatches.filter((m) => m.status === "upcoming").length}), Finished(${mergedMatches.filter((m) => m.status === "finished").length})`,
-          );
-        }
-
+        // Emit to all clients
         io.emit("liveScores", latestMatches);
+
+        // Update polling mode based on live match status
+        const hasLiveMatch = mergedMatches.some((m) => m.status === "live");
+        const nextInterval = hasLiveMatch ? 20000 : 300000; // 20s or 5m
+
+        if (nextInterval !== currentPollingInterval || !pollTimer) {
+          console.log(`🔄 [MODE] Switching polling to ${hasLiveMatch ? "LIVE" : "STANDBY"} mode (${nextInterval / 1000}s)`);
+          currentPollingInterval = nextInterval;
+          
+          if (pollTimer) clearInterval(pollTimer);
+          pollTimer = setInterval(pollAndEmit, currentPollingInterval);
+        }
       } catch (err) {
-        console.error("❌ Socket poll error:", err?.message ?? err);
+        console.error("❌ [POLL] Socket poll error:", err?.message ?? err);
         io.emit("liveScores", latestMatches);
       }
     }
 
     io.on("connection", (socket) => {
-      console.log("⚡ Client connected:", socket.id);
+      console.log("⚡ [SOCKET] Client connected:", socket.id);
+      // On connection, send cached data only. Do NOT trigger fetch per user.
       socket.emit("liveScores", latestMatches);
 
       socket.on("disconnect", () => {
-        console.log("❌ Client disconnected:", socket.id);
+        console.log("❌ [SOCKET] Client disconnected:", socket.id);
       });
     });
 
     // Initial fetch after short delay
     setTimeout(() => pollAndEmit(), 1000);
-
-    // STRICT: Only one global polling loop, every 20-30 seconds
-    const POLL_INTERVAL = 20000; // 20 seconds
-    setInterval(pollAndEmit, POLL_INTERVAL);
 
     server.listen(PORT, () => {
       console.log(`🚀 Backend running on http://localhost:${PORT}`);

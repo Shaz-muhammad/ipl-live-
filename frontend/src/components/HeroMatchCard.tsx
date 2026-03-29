@@ -161,7 +161,7 @@ export function HeroMatchCard({ match, onTeamClick }: Props) {
           animate={{ opacity: [0.7, 1, 0.7] }}
           transition={{ duration: 2, repeat: Infinity }}
         >
-          {match.statusText || "Match info unavailable"}
+          {match.status === "upcoming" ? "Match not started" : (match.statusText || "Match info unavailable")}
         </motion.p>
       </div>
     </motion.div>

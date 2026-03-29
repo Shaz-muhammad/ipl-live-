@@ -1,11 +1,12 @@
 import express from "express";
-import { fetchCurrentMatches, getMatchDetails } from "../services/cricService.js";
+import { fetchScores, getMatchDetails, getCachedScores } from "../services/cricService.js";
 
 const router = express.Router();
 
 router.get("/live-scores", async (req, res) => {
   try {
-    const { data } = await fetchCurrentMatches();
+    // REST endpoints must return cached data ONLY
+    const { data } = getCachedScores();
     return res.json(data);
   } catch (err) {
     return res.status(500).json({ error: "Failed to fetch live scores" });

@@ -159,7 +159,7 @@ export function MatchCard({ match, index, onTeamClick }: Props) {
         )}
 
         <p className="text-xs text-center text-muted-foreground font-heading border-t border-border/20 pt-2">
-          {match.statusText || "Match info unavailable"}
+          {match.status === "upcoming" ? "Match not started" : (match.statusText || "Match info unavailable")}
         </p>
 
         <p className="text-[10px] text-center text-muted-foreground opacity-70">

@@ -136,14 +136,14 @@ const Index = () => {
 
         {isError && (
           <div className="text-center py-4">
-            <p className="text-xs text-red-400">⚠️ Unable to fetch live data</p>
+            <p className="text-xs text-red-400">⚠️ Live score unavailable</p>
           </div>
         )}
 
         {!isLoading && matches.length === 0 && (
           <div className="text-center py-6">
             <p className="text-sm text-muted-foreground">
-              No IPL matches available right now
+              No IPL live match currently
             </p>
           </div>
         )}
