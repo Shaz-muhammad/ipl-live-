@@ -9,9 +9,17 @@ import bcrypt from "bcrypt";
 import adminRoutes from "./routes/adminRoutes.js";
 import cricRoutes from "./routes/cricRoutes.js";
 import blogRoutes from "./routes/blogRoutes.js";
-import { fetchScores } from "./services/cricService.js";
+import { fetchScores, setCurrentPollingMode, getPollInterval, isMatchLive } from "./services/cricService.js";
 import { getIplSchedule } from "./services/scheduleService.js";
 import { Admin } from "./models/Admin.js";
+import { resolveTeam } from "./services/teamMap.js";
+
+// Global state for cached merged matches
+let latestMatches = [];
+
+export function getLatestMatches() {
+  return latestMatches;
+}
 
 function requireEnv(name) {
   const value = process.env[name];
@@ -62,6 +70,26 @@ function mergeScheduleWithLive(schedule, liveMatches) {
       const team1Score = team1ScoreObj.r ? `${team1ScoreObj.r}/${team1ScoreObj.w}` : "";
       const team2Score = team2ScoreObj.r ? `${team2ScoreObj.r}/${team2ScoreObj.w}` : "";
 
+      // Calculate CRR/RRR if possible
+      let crr = "0";
+      let rrr = "0";
+      let target = 0;
+      const scoreArr = live.score || [];
+      if (scoreArr.length >= 1) {
+        const activeInnings = scoreArr[scoreArr.length - 1];
+        const activeRuns = Number(activeInnings?.r ?? activeInnings?.R ?? 0);
+        const activeOvers = Number(activeInnings?.o ?? activeInnings?.O ?? 0);
+        if (activeOvers > 0) crr = (activeRuns / activeOvers).toFixed(2);
+        
+        if (scoreArr.length === 2) {
+          const firstInnings = scoreArr[0];
+          target = Number(firstInnings?.r ?? firstInnings?.R ?? 0) + 1;
+          const runsRemaining = target - activeRuns;
+          const oversRemaining = 20 - activeOvers;
+          if (oversRemaining > 0 && runsRemaining > 0) rrr = (runsRemaining / oversRemaining).toFixed(2);
+        }
+      }
+
       return {
         ...fixture,
         apiId: live.id,
@@ -74,17 +102,23 @@ function mergeScheduleWithLive(schedule, liveMatches) {
         team1Overs: team1ScoreObj.o || "",
         team2Overs: team2ScoreObj.o || "",
         score: team1Score || team2Score ? `${team1Score} vs ${team2Score}` : "—",
-        status: live.matchEnded ? "finished" : "live",
+        overs: scoreArr[scoreArr.length - 1]?.o || "",
+        status: isMatchLive(live) ? "live" : (live.matchEnded ? "finished" : "upcoming"),
         statusText: live.status || "Live",
         matchStarted: !!live.matchStarted,
         matchEnded: !!live.matchEnded,
         venue: live.venue || fixture.venue,
         tossWinner: live.tossWinner || "",
         tossChoice: live.tossChoice || "",
-        result: live.matchEnded ? live.status : "",
-        target: live.score && live.score.length === 2 ? Number(live.score[0]?.r || live.score[0]?.R || 0) + 1 : 0,
-        currentInnings: live.score ? (live.score.length === 2 ? "2nd Innings" : "1st Innings") : "",
-        matchState: live.matchEnded ? "Completed" : "In Progress",
+        result: live.matchEnded ? (live.status || "Match Completed") : "",
+        target,
+        currentInnings: scoreArr.length === 2 ? "2nd Innings" : (scoreArr.length === 1 ? "1st Innings" : ""),
+        currentRunRate: crr,
+        requiredRunRate: rrr,
+        crr,
+        rrr,
+        matchState: live.matchEnded ? "Completed" : (isMatchLive(live) ? "In Progress" : "Scheduled"),
+        commentary: [], // Only available in match details
       };
     }
 
@@ -100,11 +134,20 @@ function mergeScheduleWithLive(schedule, liveMatches) {
         team1Logo: team1?.logo || "🏏",
         team2Logo: team2?.logo || "🏏",
         status: "upcoming",
-        statusText: `Starts at ${fixture.time} IST`,
+        statusText: "Match not started",
         score: "—",
+        overs: "",
         teams: [fixture.homeTeam, fixture.awayTeam],
         venue: fixture.venue,
         matchState: "Scheduled",
+        tossWinner: "",
+        tossChoice: "",
+        result: "",
+        target: 0,
+        currentInnings: "",
+        currentRunRate: "0",
+        requiredRunRate: "0",
+        commentary: [],
       };
     }
 
@@ -119,10 +162,18 @@ function mergeScheduleWithLive(schedule, liveMatches) {
       status: "finished",
       statusText: fixture.statusText || "Match completed",
       score: "—",
+      overs: "",
       teams: [fixture.homeTeam, fixture.awayTeam],
       venue: fixture.venue,
-      result: fixture.statusText || "",
+      result: fixture.statusText || "Match Completed",
       matchState: "Completed",
+      tossWinner: "",
+      tossChoice: "",
+      target: 0,
+      currentInnings: "",
+      currentRunRate: "0",
+      requiredRunRate: "0",
+      commentary: [],
     };
   });
 
@@ -209,8 +260,7 @@ async function start() {
       cors: { origin: "*", methods: ["GET", "POST"] },
     });
 
-    let latestMatches = [];
-    let currentPollingInterval = 300000; // Default to standby (5m)
+    let currentPollingInterval = 1200000; // Default to standby (20m)
     let pollTimer = null;
 
     async function pollAndEmit() {
@@ -228,10 +278,13 @@ async function start() {
 
         // Update polling mode based on live match status
         const hasLiveMatch = mergedMatches.some((m) => m.status === "live");
-        const nextInterval = hasLiveMatch ? 20000 : 300000; // 20s or 5m
+        const nextInterval = getPollInterval(hasLiveMatch);
+        const mode = hasLiveMatch ? "live" : "standby";
+
+        setCurrentPollingMode(mode);
 
         if (nextInterval !== currentPollingInterval || !pollTimer) {
-          console.log(`🔄 [MODE] Switching polling to ${hasLiveMatch ? "LIVE" : "STANDBY"} mode (${nextInterval / 1000}s)`);
+          console.log(`Polling mode: ${mode}`);
           currentPollingInterval = nextInterval;
           
           if (pollTimer) clearInterval(pollTimer);
@@ -239,6 +292,7 @@ async function start() {
         }
       } catch (err) {
         console.error("❌ [POLL] Socket poll error:", err?.message ?? err);
+        // Fallback: emit last known matches even if fetch failed
         io.emit("liveScores", latestMatches);
       }
     }

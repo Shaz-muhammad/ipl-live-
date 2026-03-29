@@ -4,104 +4,137 @@ import axios from "axios";
  const CRICAPI_BASE = "https://api.cricapi.com/v1"; 
  
  // 🚀 Cache & Rate Limit State
- let cachedLiveMatches = [];
- let lastLiveFetch = 0;
- let isFetchingLive = false;
- const LIVE_POLL_INTERVAL = 20000; // 20 seconds
- const STANDBY_POLL_INTERVAL = 300000; // 5 minutes
- 
- export function getPollInterval(hasLiveMatch) {
-   return hasLiveMatch ? LIVE_POLL_INTERVAL : STANDBY_POLL_INTERVAL;
- }
+let cachedLiveMatches = [];
+let lastLiveFetch = 0;
+let isFetchingLive = false;
+let currentPollingMode = "standby"; // "standby" | "live"
 
- function getCricKey() { 
-   const key = process.env.CRIC_API_KEY; 
-   if (!key) throw new Error("CRIC_API_KEY is not configured"); 
-   return key; 
- } 
- 
- async function fetchCric(endpoint, params = {}) { 
-   const apikey = getCricKey(); 
-   const url = `${CRICAPI_BASE}/${endpoint}`; 
- 
-   try { 
-     const response = await axios.get(url, { 
-       params: { apikey, ...params }, 
-       timeout: Number(process.env.CRICAPI_TIMEOUT_MS ?? 10000), 
-     }); 
-     
-     // Handle API failures or blocked status
-     if (response.data?.status === "failure") {
-       console.error(`❌ CricAPI Failure (${endpoint}):`, response.data.reason || "Unknown reason");
-       return null;
-     }
-     
-     return response.data; 
-   } catch (err) { 
-     console.error(`❌ CricAPI error (${endpoint}):`, err.message); 
-     return null; 
-   } 
- } 
- 
- export async function fetchCurrentMatches(force = false) { 
-   const now = Date.now();
-   
-   // 1. Check if already fetching
-   if (isFetchingLive) {
-     if (cachedLiveMatches.length > 0) {
-       console.log("Returning cached data");
-       return { data: cachedLiveMatches, fromCache: true };
-     }
-     console.log("No cache available");
-     return { data: [], fromCache: true };
-   }
+const LIVE_POLL_INTERVAL = 60000; // 1 minute
+const STANDBY_POLL_INTERVAL = 1200000; // 20 minutes
 
-   // 2. Check if called too soon (Rate limit protection)
-   const hasActiveMatch = cachedLiveMatches.some(m => m.matchStarted && !m.matchEnded);
-   const minInterval = hasActiveMatch ? LIVE_POLL_INTERVAL : STANDBY_POLL_INTERVAL;
+export function getPollInterval(hasLiveMatch) {
+  return hasLiveMatch ? LIVE_POLL_INTERVAL : STANDBY_POLL_INTERVAL;
+}
 
-   if (!force && (now - lastLiveFetch < minInterval) && cachedLiveMatches.length > 0) {
-     console.log("Returning cached data");
-     return { data: cachedLiveMatches, fromCache: true };
-   }
+export function getCurrentPollingMode() {
+  return currentPollingMode;
+}
 
-   isFetchingLive = true;
-   try {
-     console.log("Fetching fresh data from CricAPI");
-     const res = await fetchCric("currentMatches", { offset: 0 }); 
-     
-     if (res && Array.isArray(res.data)) {
-       cachedLiveMatches = res.data;
-       lastLiveFetch = now;
-       console.log(`✅ [CRICAPI] Successfully fetched ${cachedLiveMatches.length} matches.`);
-     } else {
-       if (cachedLiveMatches.length > 0) {
-         console.warn("Returning last cached data (API failed)");
-         return { data: cachedLiveMatches, fromCache: true };
-       }
-       console.log("No cache available");
-     }
-   } catch (err) {
-     console.error("❌ [CRICAPI] Error fetching live matches:", err.message);
-     if (cachedLiveMatches.length > 0) {
-       console.warn("Returning last cached data (API failed)");
-       return { data: cachedLiveMatches, fromCache: true };
-     }
-     console.log("No cache available");
-   } finally {
-     isFetchingLive = false;
-   }
+export function setCurrentPollingMode(mode) {
+  if (mode !== currentPollingMode) {
+    console.log(`Polling mode: ${mode}`);
+    currentPollingMode = mode;
+  }
+}
 
-   return { data: cachedLiveMatches, fromCache: false }; 
- } 
+function getCricKey() { 
+  const key = process.env.CRIC_API_KEY; 
+  if (!key) throw new Error("CRIC_API_KEY is not configured"); 
+  return key; 
+} 
 
- /**
-  * Returns the current cache immediately without triggering any API calls.
-  * Used for REST endpoints to ensure they only return cached data.
-  */
- export function getCachedScores() {
-   return { data: cachedLiveMatches };
- }
+async function fetchCric(endpoint, params = {}) { 
+  const apikey = getCricKey(); 
+  const url = `${CRICAPI_BASE}/${endpoint}`; 
+
+  try { 
+    const response = await axios.get(url, { 
+      params: { apikey, ...params }, 
+      timeout: Number(process.env.CRICAPI_TIMEOUT_MS ?? 15000), 
+    }); 
+    
+    // Handle API failures or blocked status
+    if (response.data?.status === "failure" || response.data?.error || response.data?.info === "blocked") {
+      console.error(`❌ CricAPI Failure (${endpoint}):`, response.data?.reason || response.data?.error || response.data?.info || "Unknown reason");
+      return null;
+    }
+    
+    return response.data; 
+  } catch (err) { 
+    console.error(`❌ CricAPI error (${endpoint}):`, err.message); 
+    return null; 
+  } 
+} 
+
+export async function fetchCurrentMatches(force = false) { 
+  const now = Date.now();
+  
+  // 1. Check if already fetching
+  if (isFetchingLive) {
+    if (cachedLiveMatches.length > 0) {
+      console.log("Returning cached data");
+      return { data: cachedLiveMatches, fromCache: true };
+    }
+    console.log("No cache available");
+    return { data: [], fromCache: true };
+  }
+
+  // 2. Check if called too soon (Rate limit protection)
+  const minInterval = currentPollingMode === "live" ? LIVE_POLL_INTERVAL : STANDBY_POLL_INTERVAL;
+
+  if (!force && (now - lastLiveFetch < minInterval) && cachedLiveMatches.length > 0) {
+    console.log("Returning cached data");
+    return { data: cachedLiveMatches, fromCache: true };
+  }
+
+  isFetchingLive = true;
+  try {
+    console.log("Fetching fresh CricAPI data");
+    const res = await fetchCric("currentMatches", { offset: 0 }); 
+    
+    if (res && Array.isArray(res.data)) {
+      cachedLiveMatches = res.data;
+      lastLiveFetch = now;
+      console.log(`✅ [CRICAPI] Successfully fetched ${cachedLiveMatches.length} matches.`);
+    } else {
+      if (cachedLiveMatches.length > 0) {
+        console.warn("Returning last cached data because API failed");
+        return { data: cachedLiveMatches, fromCache: true };
+      }
+      console.log("No cache available");
+    }
+  } catch (err) {
+    console.error("❌ [CRICAPI] Error fetching live matches:", err.message);
+    if (cachedLiveMatches.length > 0) {
+      console.warn("Returning last cached data because API failed");
+      return { data: cachedLiveMatches, fromCache: true };
+    }
+    console.log("No cache available");
+  } finally {
+    isFetchingLive = false;
+  }
+
+  return { data: cachedLiveMatches, fromCache: false }; 
+} 
+
+/**
+ * Returns the current cache immediately without triggering any API calls.
+ * Used for REST endpoints to ensure they only return cached data.
+ */
+export function getCachedScores() {
+  if (cachedLiveMatches.length === 0) {
+    console.log("No cache available");
+  }
+  return { data: cachedLiveMatches };
+}
+
+/**
+ * Helper to detect live matches safely from CricAPI response
+ */
+export function isMatchLive(match) {
+  if (!match) return false;
+  
+  // If score exists and match is active, treat as live
+  const hasScore = match.score && match.score.length > 0;
+  const isActive = match.matchStarted && !match.matchEnded;
+  
+  if (hasScore && isActive) return true;
+  
+  // If result/status says complete, treat as finished
+  if (match.matchEnded || (match.status && match.status.toLowerCase().includes("won"))) return false;
+  
+  return false;
+}
  
  // Alias for fetchCurrentMatches as requested in prompt
  export const fetchScores = fetchCurrentMatches;
