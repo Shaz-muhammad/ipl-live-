@@ -198,23 +198,32 @@ async function start() {
 
     // 🌐 CORS Configuration
     const allowedOrigins = [
-      "http://localhost:8080",
       "http://localhost:5173",
+      "http://localhost:3000",
+      "http://localhost:8080",
       "https://ipl-live-frontend.vercel.app",
       process.env.FRONTEND_URL,
     ].filter(Boolean);
 
-    app.use(
-      cors({
-        origin(origin, callback) {
-          if (!origin || allowedOrigins.includes(origin)) {
-            return callback(null, true);
-          }
-          return callback(new Error(`CORS not allowed for origin: ${origin}`));
-        },
-        credentials: false,
-      }),
-    );
+    const corsOptions = {
+      origin(origin, callback) {
+        // Allow if no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        
+        const isAllowed = allowedOrigins.includes(origin);
+        const isVercelPreview = origin.endsWith(".vercel.app");
+        
+        if (isAllowed || isVercelPreview) {
+          return callback(null, true);
+        }
+        
+        console.warn(`⚠️ CORS blocked for origin: ${origin}`);
+        return callback(new Error(`CORS not allowed for origin: ${origin}`));
+      },
+      credentials: true,
+    };
+
+    app.use(cors(corsOptions));
 
     app.use(express.json({ limit: "1mb" }));
 
@@ -257,7 +266,7 @@ async function start() {
     const server = http.createServer(app);
 
     const io = new SocketIOServer(server, {
-      cors: { origin: "*", methods: ["GET", "POST"] },
+      cors: corsOptions,
     });
 
     let currentPollingInterval = 1200000; // Default to standby (20m)
