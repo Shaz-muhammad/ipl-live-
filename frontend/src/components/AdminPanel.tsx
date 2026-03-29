@@ -55,7 +55,7 @@ export function AdminPanel({ open, onClose }: Props) {
       const res = await api.get("/admin/links");
       setAllLinks(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
-      console.error("Failed to fetch all links:", err);
+      console.error("API ERROR (fetchAllLinks):", err);
       setError("Failed to load saved links");
     } finally {
       setIsLoading(false);
@@ -80,7 +80,7 @@ export function AdminPanel({ open, onClose }: Props) {
         [trimmedMatchId]: fetchedLinks,
       }));
     } catch (err) {
-      console.error("Failed to fetch match links:", err);
+      console.error("API ERROR (fetchMatchLinks):", err);
       setError("Failed to load links for this match");
     } finally {
       setIsLoading(false);
@@ -101,14 +101,13 @@ export function AdminPanel({ open, onClose }: Props) {
 
       if (token) {
         setAuthToken(token);
-        localStorage.setItem("admin_jwt", token);
         setIsLoggedIn(true);
         await fetchAllLinks();
       } else {
         setError("Invalid response from server");
       }
     } catch (err) {
-      console.error("Login failed:", err);
+      console.error("API ERROR (handleLogin):", err);
       setError("Invalid credentials or server error");
       setIsLoggedIn(false);
     } finally {
@@ -117,7 +116,6 @@ export function AdminPanel({ open, onClose }: Props) {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("admin_jwt");
     setAuthToken(null);
     setIsLoggedIn(false);
     setUsername("");
@@ -139,15 +137,19 @@ export function AdminPanel({ open, onClose }: Props) {
     setError("");
 
     try {
+      // Get existing links for this match first
+      let currentLinks = links[trimmedMatchId] || [];
+      if (currentLinks.length === 0) {
+        const res = await api.get(`/admin/links/${encodeURIComponent(trimmedMatchId)}`);
+        currentLinks = Array.isArray(res.data?.links) ? res.data.links : [];
+      }
+
+      const updatedLinks = Array.from(new Set([...currentLinks, trimmedLink]));
+
       await api.post("/admin/links", {
         matchId: trimmedMatchId,
-        links: [trimmedLink],
+        links: updatedLinks,
       });
-
-      const res = await api.get(
-        `/admin/links/${encodeURIComponent(trimmedMatchId)}`,
-      );
-      const updatedLinks = Array.isArray(res.data?.links) ? res.data.links : [];
 
       setLinks((prev) => ({
         ...prev,
@@ -156,37 +158,35 @@ export function AdminPanel({ open, onClose }: Props) {
 
       setNewLink("");
       await fetchAllLinks();
+      alert("Link added successfully");
     } catch (err) {
-      console.error("Failed to save link:", err);
+      console.error("API ERROR (addLink):", err);
       setError("Failed to save link");
+      alert("Failed to save link");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const removeLink = async (mid: string, index: number) => {
+  const removeMatchLinks = async (mid: string) => {
+    if (!window.confirm(`Are you sure you want to delete all links for ${mid}?`)) return;
     setError("");
 
     try {
-      await api.delete(`/admin/links/${encodeURIComponent(mid)}:${index}`);
-
-      const res = await api.get(`/admin/links/${encodeURIComponent(mid)}`);
-      const updatedLinks = Array.isArray(res.data?.links) ? res.data.links : [];
-
+      await api.delete(`/admin/links/${encodeURIComponent(mid)}`);
+      
       setLinks((prev) => {
         const next = { ...prev };
-        if (updatedLinks.length === 0) {
-          delete next[mid];
-        } else {
-          next[mid] = updatedLinks;
-        }
+        delete next[mid];
         return next;
       });
 
       await fetchAllLinks();
+      alert("Links deleted successfully");
     } catch (err) {
-      console.error("Failed to delete link:", err);
-      setError("Failed to delete link");
+      console.error("API ERROR (removeMatchLinks):", err);
+      setError("Failed to delete links");
+      alert("Failed to delete links");
     }
   };
 
@@ -316,20 +316,23 @@ export function AdminPanel({ open, onClose }: Props) {
 
                 {matchId.trim() && links[matchId.trim()]?.length ? (
                   <div className="space-y-2">
-                    <p className="text-xs text-primary font-bold">
-                      {matchId.trim()}
-                    </p>
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs text-primary font-bold">
+                        {matchId.trim()}
+                      </p>
+                      <button
+                        onClick={() => void removeMatchLinks(matchId.trim())}
+                        className="text-[10px] text-red-500 hover:underline"
+                      >
+                        Delete All
+                      </button>
+                    </div>
                     {links[matchId.trim()].map((link, i) => (
                       <div
                         key={i}
                         className="flex justify-between text-xs bg-secondary p-2 rounded mt-1 gap-2"
                       >
                         <span className="truncate">{link}</span>
-                        <button
-                          onClick={() => void removeLink(matchId.trim(), i)}
-                        >
-                          <Trash2 className="h-3 w-3 text-red-500" />
-                        </button>
                       </div>
                     ))}
                   </div>
@@ -337,22 +340,29 @@ export function AdminPanel({ open, onClose }: Props) {
 
                 {allLinks.length > 0 && (
                   <div className="space-y-3 pt-2">
+                    <p className="text-xs text-muted-foreground uppercase tracking-widest font-bold border-b border-border/50 pb-1">
+                      Saved Match Links
+                    </p>
                     {allLinks.map((doc) => (
-                      <div key={doc._id || doc.matchId}>
-                        <p className="text-xs text-primary font-bold">
-                          {doc.matchId}
-                        </p>
+                      <div key={doc._id || doc.matchId} className="bg-secondary/20 p-2 rounded-lg border border-border/30">
+                        <div className="flex items-center justify-between mb-1">
+                          <p className="text-xs text-primary font-bold">
+                            {doc.matchId}
+                          </p>
+                          <button
+                            onClick={() => void removeMatchLinks(doc.matchId)}
+                            className="text-red-500 hover:text-red-400"
+                            title="Delete match links"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </button>
+                        </div>
                         {doc.links.map((link, i) => (
                           <div
                             key={`${doc.matchId}-${i}`}
-                            className="flex justify-between text-xs bg-secondary p-2 rounded mt-1 gap-2"
+                            className="text-[10px] text-muted-foreground truncate opacity-70"
                           >
-                            <span className="truncate">{link}</span>
-                            <button
-                              onClick={() => void removeLink(doc.matchId, i)}
-                            >
-                              <Trash2 className="h-3 w-3 text-red-500" />
-                            </button>
+                            • {link}
                           </div>
                         ))}
                       </div>

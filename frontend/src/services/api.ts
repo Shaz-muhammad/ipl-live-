@@ -30,11 +30,13 @@ export const adminApi = axios.create({
 
 export function setAuthToken(token: string | null) {
   if (!token) {
+    delete api.defaults.headers.common.Authorization;
     delete adminApi.defaults.headers.common.Authorization;
     localStorage.removeItem("admin_jwt");
     return;
   }
 
+  api.defaults.headers.common.Authorization = `Bearer ${token}`;
   adminApi.defaults.headers.common.Authorization = `Bearer ${token}`;
   localStorage.setItem("admin_jwt", token);
 }
@@ -42,6 +44,7 @@ export function setAuthToken(token: string | null) {
 export function loadAuthToken() {
   const token = localStorage.getItem("admin_jwt");
   if (token) {
+    api.defaults.headers.common.Authorization = `Bearer ${token}`;
     adminApi.defaults.headers.common.Authorization = `Bearer ${token}`;
   }
 }
