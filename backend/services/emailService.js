@@ -26,9 +26,9 @@ export async function sendContactEmails({ name, email, subject, message }) {
   }
 
   const transporter = nodemailer.createTransport({
-    host: SMTP_HOST,
-    port: Number(SMTP_PORT || 587),
-    secure: Number(SMTP_PORT) === 465,
+    host: SMTP_HOST || "smtp.gmail.com",
+    port: Number(SMTP_PORT || 465),
+    secure: Number(SMTP_PORT || 465) === 465,
     auth: {
       user: SMTP_USER,
       pass: SMTP_PASS,
@@ -39,10 +39,16 @@ export async function sendContactEmails({ name, email, subject, message }) {
   });
 
   try {
-    // 1. Verify connection
-    console.log("📡 Verifying SMTP connection...");
-    await transporter.verify();
-    console.log("✅ SMTP connection verified");
+    // 1. Verify connection explicitly before sending
+    console.log(`📡 Verifying SMTP connection to ${SMTP_HOST || "smtp.gmail.com"}:${SMTP_PORT || 465}...`);
+    try {
+      await transporter.verify();
+      console.log("✅ SMTP connection verified");
+    } catch (verifyErr) {
+      console.error("❌ SMTP Verification Failed:", verifyErr.message);
+      status.error = `SMTP connection failed: ${verifyErr.message}`;
+      return status;
+    }
 
     // 2. Send notification to Support (MANDATORY for 'success')
     const adminMailOptions = {
