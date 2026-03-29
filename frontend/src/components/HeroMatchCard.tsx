@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { LiveBadge } from "./LiveBadge";
-import type { Match } from "@/lib/transformCricAPI";
+import type { Match } from "@/pages/Index";
 
 interface Props {
   match: Match;
@@ -14,34 +14,19 @@ export function HeroMatchCard({ match, onTeamClick }: Props) {
   if (!match) return null;
 
   const state = match.matchState?.toLowerCase() || "";
-  const statusText = match.status || "";
-  const lowerStatus = statusText.toLowerCase();
+  const status = match.status?.toLowerCase() || "";
 
   const isLive =
     state.includes("progress") ||
-    state === "live" ||
-    lowerStatus.includes("need") ||
-    lowerStatus.includes("opt") ||
-    lowerStatus.includes("won toss") ||
-    Boolean(match.team1Score) ||
-    Boolean(match.team2Score);
+    status.includes("need") ||
+    status.includes("opt") ||
+    status.includes("won toss");
 
   const isFinished =
     state === "complete" ||
-    state === "completed" ||
-    lowerStatus.includes("won by") ||
-    lowerStatus.includes("match tied") ||
-    lowerStatus.includes("no result");
+    status.includes("won by");
 
   const displayStatus = isLive ? "live" : isFinished ? "finished" : "upcoming";
-
-  const team1Id = match.team1.id;
-  const team2Id = match.team2.id;
-
-  const team1Primary = match.team1.primaryColor;
-  const team1Secondary = match.team1.secondaryColor;
-  const team2Primary = match.team2.primaryColor;
-  const team2Secondary = match.team2.secondaryColor;
 
   return (
     <motion.div
@@ -51,10 +36,8 @@ export function HeroMatchCard({ match, onTeamClick }: Props) {
       onClick={() => navigate(`/match/${match.apiId || match.id}`)}
       className="glass-card neon-border cursor-pointer p-5 md:p-6 max-w-2xl mx-auto overflow-hidden relative"
     >
-      {/* Background Accent */}
       <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl rounded-full -mr-16 -mt-16 pointer-events-none" />
       
-      {/* 1. TOP ROW: Badge & Venue/Time */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           {displayStatus === "live" ? (
@@ -72,16 +55,20 @@ export function HeroMatchCard({ match, onTeamClick }: Props) {
         </div>
       </div>
 
-      {/* 2. CENTER SCORE AREA (Information Dense) */}
       <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4 md:gap-8 mb-6">
-        {/* Team 1 */}
-        <div className="flex items-center gap-3">
+        <div 
+          className="flex items-center gap-3 cursor-pointer group"
+          onClick={(e) => {
+            e.stopPropagation();
+            onTeamClick(match.team1Short || match.team1, "#00ffff", "#0ea5e9");
+          }}
+        >
           <div className="flex flex-col items-center gap-1">
-             <span className="text-3xl md:text-4xl filter drop-shadow-neon-sm">
-              {match.team1.logo}
+             <span className="text-3xl md:text-4xl filter drop-shadow-neon-sm group-hover:scale-110 transition-transform">
+              {match.team1Logo || "🏏"}
             </span>
             <span className="font-heading text-xs font-bold text-muted-foreground uppercase tracking-tighter">
-              {match.team1Short || match.team1.shortName}
+              {match.team1Short || match.team1?.substring(0, 3)}
             </span>
           </div>
           <div className="flex flex-col">
@@ -96,7 +83,6 @@ export function HeroMatchCard({ match, onTeamClick }: Props) {
           </div>
         </div>
 
-        {/* VS Divider */}
         <div className="flex flex-col items-center">
           <div className="h-8 w-[1px] bg-border/50" />
           <span className="font-display text-[10px] text-muted-foreground/50 my-1 font-bold">
@@ -105,8 +91,13 @@ export function HeroMatchCard({ match, onTeamClick }: Props) {
           <div className="h-8 w-[1px] bg-border/50" />
         </div>
 
-        {/* Team 2 */}
-        <div className="flex items-center gap-3 justify-end text-right">
+        <div 
+          className="flex items-center gap-3 justify-end text-right cursor-pointer group"
+          onClick={(e) => {
+            e.stopPropagation();
+            onTeamClick(match.team2Short || match.team2, "#a855f7", "#ec4899");
+          }}
+        >
           <div className="flex flex-col items-end">
             <span className="font-display text-xl md:text-3xl font-bold text-foreground leading-none">
               {match.team2Score || "—"}
@@ -118,28 +109,25 @@ export function HeroMatchCard({ match, onTeamClick }: Props) {
             )}
           </div>
           <div className="flex flex-col items-center gap-1">
-            <span className="text-3xl md:text-4xl filter drop-shadow-neon-sm">
-              {match.team2.logo}
+            <span className="text-3xl md:text-4xl filter drop-shadow-neon-sm group-hover:scale-110 transition-transform">
+              {match.team2Logo || "🏏"}
             </span>
             <span className="font-heading text-xs font-bold text-muted-foreground uppercase tracking-tighter">
-              {match.team2Short || match.team2.shortName}
+              {match.team2Short || match.team2?.substring(0, 3)}
             </span>
           </div>
         </div>
       </div>
 
-      {/* 3. STATUS LINE & EXTRA INFO */}
       <div className="pt-4 border-t border-border/30 space-y-3">
-        {/* Primary Status Sentence */}
         <p className={`text-sm md:text-base font-heading font-bold text-center ${
           displayStatus === "live" ? "neon-text-accent animate-pulse" : "text-foreground"
         }`}>
           {displayStatus === "upcoming" 
             ? `Starts at ${match.time || "TBD"}` 
-            : (match.result || statusText || "Match info unavailable")}
+            : (match.status || "Match info unavailable")}
         </p>
 
-        {/* Compact Details Row */}
         <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-[10px] md:text-xs text-muted-foreground font-medium">
           {match.tossWinner && match.tossChoice && (
             <span className="flex items-center gap-1">

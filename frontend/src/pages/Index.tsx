@@ -9,15 +9,39 @@ import { WatchLiveModal } from "@/components/WatchLiveModal";
 import { AdminPanel } from "@/components/AdminPanel";
 import { useTeamTheme } from "@/hooks/useTeamTheme";
 import { connectSocket } from "@/services/socket";
-import type { Match, MergedMatch } from "@/lib/transformCricAPI";
-import { transformMergedMatch } from "@/lib/transformCricAPI";
 
-type ApiStatus = "live" | "no-match" | "paused" | "unavailable";
+export type Match = { 
+  id: string; 
+  apiId?: string; 
+  team1: string; 
+  team2: string; 
+  team1Short?: string; 
+  team2Short?: string; 
+  team1Logo?: string; 
+  team2Logo?: string; 
+  team1Score?: string; 
+  team2Score?: string; 
+  team1Overs?: string; 
+  team2Overs?: string; 
+  status?: string; 
+  matchState?: string; 
+  tossWinner?: string; 
+  tossChoice?: string; 
+  result?: string; 
+  target?: number; 
+  rrr?: string; 
+  currentInnings?: string; 
+  venue?: string; 
+  date?: string; 
+  time?: string; 
+}; 
 
-type LiveScoreResponse = {
-  apiStatus: ApiStatus;
-  data: MergedMatch[];
-};
+type ApiStatus = "live" | "no-match" | "paused" | "unavailable"; 
+
+type LiveScoreResponse = { 
+  apiStatus: ApiStatus; 
+  data: Match[] 
+}; 
 
 const Index = () => {
   const [showWatchLive, setShowWatchLive] = useState(false);
@@ -42,21 +66,18 @@ const Index = () => {
       console.log("✅ Connected to backend");
     });
 
-    const onLiveScores = (response: LiveScoreResponse | MergedMatch[]) => {
+    const onLiveScores = (response: LiveScoreResponse | Match[]) => {
       console.log("SOCKET DATA:", response);
 
       let status: ApiStatus = "live";
-      let mergedData: MergedMatch[] = [];
+      let data: Match[] = [];
 
       if (Array.isArray(response)) {
-        mergedData = response;
+        data = response;
       } else {
         status = response.apiStatus ?? "live";
-        mergedData = response.data ?? [];
+        data = response.data ?? [];
       }
-
-      // Transform MergedMatch to Match (UI format)
-      const data = mergedData.map(m => transformMergedMatch(m));
 
       setApiStatus(status);
       setCricMatches(data);
@@ -86,15 +107,12 @@ const Index = () => {
     };
   }, []);
 
-  // Filter for truly live matches
   const liveMatches = useMemo(() => {
     return matches.filter((m) => {
       const state = m.matchState?.toLowerCase() || "";
       const status = m.status?.toLowerCase() || "";
-
       return (
-        state.includes("progress") || 
-        state === "live" ||
+        state.includes("progress") ||
         status.includes("need") ||
         status.includes("opt") ||
         status.includes("won toss") ||
@@ -104,39 +122,18 @@ const Index = () => {
     });
   }, [matches]);
 
-  // Filter for finished matches (most recent first)
-  const finishedMatches = useMemo(() => {
-    return matches.filter((m) => {
-      const state = m.matchState?.toLowerCase() || "";
-      const status = m.status?.toLowerCase() || "";
-      return state === "complete" || state === "completed" || status.includes("won by");
-    }).sort((a, b) => {
-      // Basic sorting logic if needed, otherwise assume order from API is correct
-      return 0; 
-    });
-  }, [matches]);
+  const heroMatch = useMemo(() => {
+    return liveMatches.length > 0 
+      ? liveMatches[0] 
+      : matches.length > 0 
+      ? matches[0] 
+      : undefined;
+  }, [liveMatches, matches]);
 
-  // 1. Hero Strategy: Live Match first, then Most Recent Finished
-  const heroMatch = liveMatches.length > 0 ? liveMatches[0] : (finishedMatches.length > 0 ? finishedMatches[0] : undefined);
-
-  // 2. List Strategy: All other live matches, then all other finished matches
   const listMatches = useMemo(() => {
-    const all = [];
-    
-    // Add other live matches (except hero)
-    if (liveMatches.length > 1) {
-      all.push(...liveMatches.slice(1));
-    }
-    
-    // Add finished matches (if hero is live, show all. If hero is finished, show remaining)
-    const finishedToShow = heroMatch && liveMatches.length === 0 
-      ? finishedMatches.slice(1) 
-      : finishedMatches;
-      
-    all.push(...finishedToShow);
-    
-    return all;
-  }, [liveMatches, finishedMatches, heroMatch]);
+    if (!heroMatch) return [];
+    return matches.filter(m => m.id !== heroMatch.id);
+  }, [matches, heroMatch]);
 
   const handleTeamClick = (
     teamId: string,
@@ -179,7 +176,7 @@ const Index = () => {
 
             {listMatches.length > 0 && (
               <section>
-                <SectionHeader icon="🏏" title={liveMatches.length > 1 ? "Live & Recent Matches" : "Recent Matches"} />
+                <SectionHeader icon="🏏" title="More Matches" />
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {listMatches.map((m, i) => (
                     <MatchCard

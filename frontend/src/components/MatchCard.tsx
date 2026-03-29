@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { LiveBadge } from "./LiveBadge";
-import type { Match } from "@/lib/transformCricAPI";
+import type { Match } from "@/pages/Index";
 
 interface Props {
   match: Match;
@@ -24,12 +24,12 @@ export function MatchCard({ match, index, onTeamClick }: Props) {
     Boolean(match.team1Score) ||
     Boolean(match.team2Score);
 
-  const isFinished = state === "complete" || statusText.includes("won by") || state === "completed";
+  const isFinished = 
+    state === "complete" || 
+    statusText.includes("won by") || 
+    state === "completed";
 
   const displayStatus = isLive ? "live" : isFinished ? "finished" : "upcoming";
-
-  const team1Id = match.team1.id;
-  const team2Id = match.team2.id;
 
   return (
     <motion.div
@@ -42,7 +42,6 @@ export function MatchCard({ match, index, onTeamClick }: Props) {
         isLive ? "neon-border shadow-neon-sm" : "border border-border/50"
       }`}
     >
-      {/* Header Info */}
       <div className="flex items-center justify-between mb-4 border-b border-border/10 pb-2">
         <div className="flex items-center gap-2">
           {isLive ? (
@@ -60,16 +59,14 @@ export function MatchCard({ match, index, onTeamClick }: Props) {
         </span>
       </div>
 
-      {/* Teams & Scores (Cricbuzz Style List) */}
       <div className="space-y-3">
-        {/* Team 1 Row */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
              <span className="text-xl filter drop-shadow-neon-sm">
-              {match.team1.logo}
+              {match.team1Logo || "🏏"}
             </span>
             <span className={`font-heading font-bold text-sm ${isLive ? 'text-foreground' : 'text-foreground/80'}`}>
-              {match.team1Short || match.team1.shortName}
+              {match.team1Short || match.team1}
             </span>
           </div>
           <div className="flex items-baseline gap-1.5">
@@ -84,14 +81,13 @@ export function MatchCard({ match, index, onTeamClick }: Props) {
           </div>
         </div>
 
-        {/* Team 2 Row */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
              <span className="text-xl filter drop-shadow-neon-sm">
-              {match.team2.logo}
+              {match.team2Logo || "🏏"}
             </span>
             <span className={`font-heading font-bold text-sm ${isLive ? 'text-foreground' : 'text-foreground/80'}`}>
-              {match.team2Short || match.team2.shortName}
+              {match.team2Short || match.team2}
             </span>
           </div>
           <div className="flex items-baseline gap-1.5">
@@ -107,12 +103,11 @@ export function MatchCard({ match, index, onTeamClick }: Props) {
         </div>
       </div>
 
-      {/* Status Footer */}
       <div className="mt-4 pt-2 border-t border-border/10">
         <p className={`text-[11px] font-heading font-bold truncate ${
           isLive ? 'neon-text-accent animate-pulse' : 'text-muted-foreground'
         }`}>
-          {isFinished ? (match.result || "Match Completed") : (match.status || "Upcoming Match")}
+          {match.status || "Upcoming Match"}
         </p>
         <p className="text-[9px] text-muted-foreground/60 mt-1 truncate">
           {match.venue || "Unknown venue"}
