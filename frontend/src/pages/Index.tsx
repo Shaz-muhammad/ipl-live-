@@ -19,8 +19,6 @@ const Index = () => {
   const [showWatchLive, setShowWatchLive] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
   const [selectedMatchIds, setSelectedMatchIds] = useState<string[]>([]);
-  const [showAllUpcoming, setShowAllUpcoming] = useState(false);
-  const [showAllFinished, setShowAllFinished] = useState(false);
 
   const { setTeamTheme, resetTheme } = useTeamTheme();
 
@@ -73,31 +71,17 @@ const Index = () => {
   }, []);
 
   const liveMatches = useMemo(
-    () => matches.filter((m) => m.status === "live"),
+    () => (matches || []).filter(
+      (m) =>
+        m?.status?.toLowerCase().includes("live") ||
+        (m as any)?.matchState === "live" ||
+        m?.team1Score ||
+        m?.team2Score
+    ),
     [matches],
   );
 
-  const upcomingMatches = useMemo(
-    () => matches.filter((m) => m.status === "upcoming"),
-    [matches],
-  );
-
-  const finishedMatches = useMemo(
-    () => matches.filter((m) => m.status === "finished"),
-    [matches],
-  );
-
-  const visibleUpcomingMatches = useMemo(
-    () => (showAllUpcoming ? upcomingMatches : upcomingMatches.slice(0, 2)),
-    [showAllUpcoming, upcomingMatches],
-  );
-
-  const visibleFinishedMatches = useMemo(
-    () => (showAllFinished ? finishedMatches : finishedMatches.slice(0, 2)),
-    [showAllFinished, finishedMatches],
-  );
-
-  const heroMatch = liveMatches[0] || upcomingMatches[0] || finishedMatches[0];
+  const heroMatch = liveMatches[0];
 
   const handleTeamClick = (
     teamId: string,
@@ -108,12 +92,7 @@ const Index = () => {
   };
 
   const openWatchLive = () => {
-    const relevantMatches =
-      liveMatches.length > 0
-        ? liveMatches.slice(0, 2)
-        : upcomingMatches.length > 0
-          ? upcomingMatches.slice(0, 2)
-          : finishedMatches.slice(0, 2);
+    const relevantMatches = liveMatches.slice(0, 2);
 
     setSelectedMatchIds(relevantMatches.map((match) => match.id));
     setShowWatchLive(true);
@@ -148,97 +127,42 @@ const Index = () => {
           </div>
         )}
 
-        {heroMatch && (
-          <section>
-            <HeroMatchCard match={heroMatch} onTeamClick={handleTeamClick} />
-          </section>
+        {heroMatch ? (
+          <>
+            <section>
+              <HeroMatchCard match={heroMatch} onTeamClick={handleTeamClick} />
+            </section>
+
+            <section>
+              <SectionHeader icon="🔴" title="Live Matches" />
+              {liveMatches.length > 0 ? (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {liveMatches.map((m, i) => (
+                    <MatchCard
+                      key={m.id}
+                      match={m}
+                      index={i}
+                      onTeamClick={handleTeamClick}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground text-center">
+                  No live matches currently
+                </p>
+              )}
+            </section>
+          </>
+        ) : !isLoading && (
+          <div className="text-center py-20 glass-card rounded-2xl border border-border/50">
+            <p className="text-lg font-heading font-bold text-muted-foreground">
+              No IPL live match currently
+            </p>
+            <p className="text-xs text-muted-foreground/60 mt-2">
+              Stay tuned for upcoming live action!
+            </p>
+          </div>
         )}
-
-        <section>
-          <SectionHeader icon="🔴" title="Live Matches" />
-          {liveMatches.length > 0 ? (
-            <div className="grid gap-4 sm:grid-cols-2">
-              {liveMatches.map((m, i) => (
-                <MatchCard
-                  key={m.id}
-                  match={m}
-                  index={i}
-                  onTeamClick={handleTeamClick}
-                />
-              ))}
-            </div>
-          ) : (
-            <p className="text-xs text-muted-foreground text-center">
-              No live matches currently
-            </p>
-          )}
-        </section>
-
-        <section>
-          <SectionHeader icon="📅" title="Upcoming Matches" />
-          {upcomingMatches.length > 0 ? (
-            <>
-              <div className="grid gap-4 sm:grid-cols-2">
-                {visibleUpcomingMatches.map((m, i) => (
-                  <MatchCard
-                    key={m.id}
-                    match={m}
-                    index={i}
-                    onTeamClick={handleTeamClick}
-                  />
-                ))}
-              </div>
-
-              {upcomingMatches.length >= 3 && (
-                <div className="flex justify-center mt-4">
-                  <button
-                    onClick={() => setShowAllUpcoming((prev) => !prev)}
-                    className="px-4 py-2 rounded-lg bg-secondary text-secondary-foreground text-sm font-heading font-bold hover:opacity-90 transition-opacity"
-                  >
-                    {showAllUpcoming ? "See Less" : "See More"}
-                  </button>
-                </div>
-              )}
-            </>
-          ) : (
-            <p className="text-xs text-muted-foreground text-center">
-              No upcoming matches
-            </p>
-          )}
-        </section>
-
-        <section>
-          <SectionHeader icon="✅" title="Finished Matches" />
-          {finishedMatches.length > 0 ? (
-            <>
-              <div className="grid gap-4 sm:grid-cols-2">
-                {visibleFinishedMatches.map((m, i) => (
-                  <MatchCard
-                    key={m.id}
-                    match={m}
-                    index={i}
-                    onTeamClick={handleTeamClick}
-                  />
-                ))}
-              </div>
-
-              {finishedMatches.length >= 3 && (
-                <div className="flex justify-center mt-4">
-                  <button
-                    onClick={() => setShowAllFinished((prev) => !prev)}
-                    className="px-4 py-2 rounded-lg bg-secondary text-secondary-foreground text-sm font-heading font-bold hover:opacity-90 transition-opacity"
-                  >
-                    {showAllFinished ? "See Less" : "See More"}
-                  </button>
-                </div>
-              )}
-            </>
-          ) : (
-            <p className="text-xs text-muted-foreground text-center">
-              No finished matches
-            </p>
-          )}
-        </section>
 
         <BlogSection />
       </main>
