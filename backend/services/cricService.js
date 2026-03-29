@@ -1,246 +1,176 @@
 import axios from "axios"; 
- import { buildMatchDetails } from "./matchTransform.js"; 
  
- const CRICAPI_BASE = "https://api.cricapi.com/v1"; 
+ // 🚀 Cache State
+ let cachedLiveMatches = [];
+ let lastLiveFetch = 0;
+ let isFetchingLive = false;
  
- // 🚀 Cache & Rate Limit State
-let cachedLiveMatches = [];
-let lastLiveFetch = 0;
-let isFetchingLive = false;
-let currentPollingMode = "standby"; // "standby" | "live"
-let blockedUntil = 0; // ⏳ Timestamp until which API calls are blocked
-
-const LIVE_POLL_INTERVAL = 60000; // 1 minute
-const STANDBY_POLL_INTERVAL = 1200000; // 20 minutes
-const BLOCK_DURATION = 1200000; // 20 minutes pause
-
-export function getPollInterval(hasLiveMatch) {
-  return hasLiveMatch ? LIVE_POLL_INTERVAL : STANDBY_POLL_INTERVAL;
-}
-
-export function getApiStatus(mergedMatches = []) {
-  const now = Date.now();
-  const hasLiveMatch = mergedMatches.some((m) => m.status === "live");
-
-  if (hasLiveMatch) return "live";
-  if (now < blockedUntil) return "paused";
-  if (mergedMatches.length === 0) return "unavailable";
-  
-  // If we have data but no live matches, it's "no-match"
-  return "no-match";
-}
-
-export function getCurrentPollingMode() {
-  return currentPollingMode;
-}
-
-export function setCurrentPollingMode(mode) {
-  if (mode !== currentPollingMode) {
-    console.log(`Polling mode: ${mode}`);
-    currentPollingMode = mode;
-  }
-}
-
-function getCricKey() { 
-  const key = process.env.CRIC_API_KEY; 
-  if (!key) throw new Error("CRIC_API_KEY is not configured"); 
-  return key; 
-} 
-
-async function fetchCric(endpoint, params = {}) { 
-  const now = Date.now();
-
-  // 1. Check if we are currently in a blocked period
-  if (now < blockedUntil) {
-    const minutesLeft = Math.ceil((blockedUntil - now) / 60000);
-    console.log(`⏳ CricAPI is currently blocked. Resuming in ${minutesLeft} minutes.`);
-    return null;
-  }
-
-  const apikey = getCricKey(); 
-  const url = `${CRICAPI_BASE}/${endpoint}`; 
-
-  try { 
-    const response = await axios.get(url, { 
-      params: { apikey, ...params }, 
-      timeout: Number(process.env.CRICAPI_TIMEOUT_MS ?? 15000), 
-    }); 
-    
-    const data = response.data;
-
-    // Detect if API is blocked or rate-limited
-    const isBlocked = 
-      data?.status === "failure" || 
-      data?.error || 
-      data?.info === "blocked" ||
-      (typeof data?.reason === "string" && data.reason.toLowerCase().includes("blocked")) ||
-      (typeof data?.reason === "string" && data.reason.toLowerCase().includes("limit"));
-
-    if (isBlocked) {
-      blockedUntil = now + BLOCK_DURATION;
-      console.error(`❌ CricAPI Blocked/Rate-limited (${endpoint}). Pausing all calls for 20 minutes.`);
-      console.error(`Reason: ${data?.reason || data?.error || data?.info || "Unknown"}`);
-      return null;
-    }
-    
-    return data; 
-  } catch (err) { 
-    console.error(`❌ CricAPI error (${endpoint}):`, err.message); 
-    
-    // If it's a 429 or other rate-limit related error, trigger block
-    if (err.response?.status === 429) {
-      blockedUntil = now + BLOCK_DURATION;
-      console.error("❌ Received 429 Too Many Requests. Pausing for 20 minutes.");
-    }
-    
-    return null; 
-  } 
-} 
-
-export async function fetchCurrentMatches(force = false) { 
-  const now = Date.now();
-  
-  // 1. Check if already fetching
-  if (isFetchingLive) {
-    if (cachedLiveMatches.length > 0) {
-      console.log("Returning cached data");
-      return { data: cachedLiveMatches, fromCache: true };
-    }
-    console.log("No cache available");
-    return { data: [], fromCache: true };
-  }
-
-  // 2. Check if called too soon (Rate limit protection)
-  const minInterval = currentPollingMode === "live" ? LIVE_POLL_INTERVAL : STANDBY_POLL_INTERVAL;
-
-  if (!force && (now - lastLiveFetch < minInterval) && cachedLiveMatches.length > 0) {
-    console.log("Returning cached data");
-    return { data: cachedLiveMatches, fromCache: true };
-  }
-
-  // 3. Check if we are currently blocked
-  if (now < blockedUntil) {
-    if (cachedLiveMatches.length > 0) {
-      console.log("Returning cached data (API Blocked)");
-      return { data: cachedLiveMatches, fromCache: true };
-    }
-    console.log("No cache available (API Blocked)");
-    return { data: [], fromCache: true };
-  }
-
-  isFetchingLive = true;
-  try {
-    console.log("Fetching fresh CricAPI data");
-    const res = await fetchCric("currentMatches", { offset: 0 }); 
-    
-    if (res && Array.isArray(res.data)) {
-      cachedLiveMatches = res.data;
-      lastLiveFetch = now;
-      console.log(`✅ [CRICAPI] Successfully fetched ${cachedLiveMatches.length} matches.`);
-    } else {
-      if (cachedLiveMatches.length > 0) {
-        console.warn("Returning last cached data because API failed");
-        return { data: cachedLiveMatches, fromCache: true };
-      }
-      console.log("No cache available");
-    }
-  } catch (err) {
-    console.error("❌ [CRICAPI] Error fetching live matches:", err.message);
-    if (cachedLiveMatches.length > 0) {
-      console.warn("Returning last cached data because API failed");
-      return { data: cachedLiveMatches, fromCache: true };
-    }
-    console.log("No cache available");
-  } finally {
-    isFetchingLive = false;
-  }
-
-  return { data: cachedLiveMatches, fromCache: false }; 
-} 
-
-/**
- * Returns the current cache immediately without triggering any API calls.
- * Used for REST endpoints to ensure they only return cached data.
- */
-export function getCachedScores() {
-  if (cachedLiveMatches.length === 0) {
-    console.log("No cache available");
-  }
-  return { data: cachedLiveMatches };
-}
-
-/**
- * Helper to detect live matches safely from CricAPI response
- */
-export function isMatchLive(match) {
-  if (!match) return false;
-  
-  // If score exists and match is active, treat as live
-  const hasScore = match.score && match.score.length > 0;
-  const isActive = match.matchStarted && !match.matchEnded;
-  
-  if (hasScore && isActive) return true;
-  
-  // If result/status says complete, treat as finished
-  if (match.matchEnded || (match.status && match.status.toLowerCase().includes("won"))) return false;
-  
-  return false;
-}
+ const POLL_INTERVAL = 60000; // 60 seconds as requested
  
- // Alias for fetchCurrentMatches as requested in prompt
+ function getRapidKey() { 
+   const key = process.env.RAPID_API_KEY; 
+   if (!key) throw new Error("RAPID_API_KEY is not configured"); 
+   return key; 
+ } 
+ 
+ async function fetchLiveMatches() { 
+   try { 
+     console.log("Fetching fresh data from RapidAPI (Cricbuzz)");
+     const response = await axios.get( 
+       "https://cricbuzz-cricket.p.rapidapi.com/matches/v1/live", 
+       { 
+         headers: { 
+           "x-rapidapi-key": getRapidKey(), 
+           "x-rapidapi-host": "cricbuzz-cricket.p.rapidapi.com", 
+         }, 
+       } 
+     ); 
+  
+     const typeMatches = response.data?.typeMatches || []; 
+     let matches = []; 
+  
+     typeMatches.forEach(type => { 
+       type.seriesMatches?.forEach(series => { 
+         series.seriesAdWrapper?.matches?.forEach(match => { 
+           matches.push(match); 
+         }); 
+       }); 
+     }); 
+  
+     return matches; 
+   } catch (error) { 
+     console.error("API error:", error.message); 
+     return []; 
+   } 
+ } 
+ 
+ function isIPL(match) { 
+   const name = 
+     match?.matchInfo?.seriesName?.toLowerCase() || 
+     ""; 
+  
+   return name.includes("indian premier league") || name.includes("ipl"); 
+ } 
+ 
+ function normalizeMatch(match) { 
+   const info = match.matchInfo; 
+   const score = match.matchScore;
+   
+   const team1Name = info.team1?.teamName;
+   const team2Name = info.team2?.teamName;
+ 
+   // Extract scores for mergeScheduleWithLive compatibility
+   const scores = [];
+   if (score?.team1Score?.inngs1) {
+     scores.push({
+       inning: team1Name,
+       r: score.team1Score.inngs1.runs,
+       w: score.team1Score.inngs1.wickets,
+       o: score.team1Score.inngs1.overs
+     });
+   }
+   if (score?.team2Score?.inngs1) {
+     scores.push({
+       inning: team2Name,
+       r: score.team2Score.inngs1.runs,
+       w: score.team2Score.inngs1.wickets,
+       o: score.team2Score.inngs1.overs
+     });
+   }
+ 
+   return { 
+     id: String(info.matchId), 
+     teams: [team1Name, team2Name],
+     team1: team1Name, 
+     team2: team2Name, 
+     status: info.status, 
+     venue: info.venueInfo?.ground, 
+     matchState: info.state,
+     matchStarted: info.state !== "Preview",
+     matchEnded: info.state === "Complete",
+     score: scores
+   }; 
+ } 
+ 
+ export async function fetchCurrentMatches(force = false) { 
+   const now = Date.now();
+   
+   if (isFetchingLive) {
+     return { data: cachedLiveMatches, fromCache: true };
+   }
+ 
+   if (!force && (now - lastLiveFetch < POLL_INTERVAL) && cachedLiveMatches.length > 0) {
+     return { data: cachedLiveMatches, fromCache: true };
+   }
+ 
+   isFetchingLive = true;
+   try {
+     const matches = await fetchLiveMatches(); 
+     const iplMatches = matches.filter(isIPL); 
+     const formatted = iplMatches.map(normalizeMatch); 
+  
+     if (formatted.length > 0 || matches.length > 0) {
+       cachedLiveMatches = formatted;
+       lastLiveFetch = now;
+     }
+   } catch (err) {
+     console.error("❌ [RAPIDAPI] Error fetching live matches:", err.message);
+   } finally {
+     isFetchingLive = false;
+   }
+ 
+   return { data: cachedLiveMatches, fromCache: false }; 
+ } 
+ 
+ export function getCachedScores() {
+   return { data: cachedLiveMatches };
+ }
+ 
+ export function getApiStatus(mergedMatches = []) {
+   const hasLiveMatch = mergedMatches.some((m) => m.status === "live");
+   if (hasLiveMatch) return "live";
+   if (cachedLiveMatches.length === 0 && lastLiveFetch === 0) return "unavailable";
+   return "no-match";
+ }
+ 
+ // Maintain existing exports for server.js
  export const fetchScores = fetchCurrentMatches;
  
- export async function fetchMatchInfo(matchId) { 
-   return fetchCric("match_info", { id: matchId }); 
- } 
- 
- export async function fetchMatchScorecard(matchId) { 
-   return fetchCric("match_scorecard", { id: matchId }); 
- } 
- 
- // Cache for individual match details to prevent rate-limiting on details page
- const matchDetailsCache = new Map();
- const MATCH_DETAIL_CACHE_TTL = 15000; // 15 seconds
-
+ // Minimal implementation for match details since we switched to Cricbuzz
+ // In a real scenario, we'd call Cricbuzz match info/scorecard endpoints.
  export async function getMatchDetails(matchId) { 
-   const now = Date.now();
-   const cached = matchDetailsCache.get(matchId);
-   
-   // 1. If we have a cache and it's fresh, use it
-   if (cached && (now - cached.timestamp < MATCH_DETAIL_CACHE_TTL)) {
-     console.log(`🛡️ Returning cached details for match ${matchId}`);
-     return cached.data;
+   const match = cachedLiveMatches.find(m => m.id === String(matchId));
+   if (match) {
+     return {
+       ...match,
+       team1: { shortName: match.team1, logo: "🏏" },
+       team2: { shortName: match.team2, logo: "🏏" },
+       team1Score: match.score[0]?.r ? `${match.score[0].r}/${match.score[0].w}` : "",
+       team2Score: match.score[1]?.r ? `${match.score[1].r}/${match.score[1].w}` : "",
+       team1Overs: match.score[0]?.o || "",
+       team2Overs: match.score[1]?.o || "",
+       statusText: match.status,
+       commentary: [],
+       batting: [],
+       bowling: []
+     };
    }
-
-   // 2. If we are currently blocked by CricAPI, return the cache even if expired
-   if (now < blockedUntil) {
-     if (cached) {
-       console.log(`⏳ API Blocked: Returning last cached details for match ${matchId}`);
-       return cached.data;
-     }
-     console.log(`⏳ API Blocked: No cache available for match ${matchId}`);
-     return null;
-   }
-
-   const [matchInfoRes, matchScorecardRes] = await Promise.allSettled([ 
-     fetchMatchInfo(matchId), 
-     fetchMatchScorecard(matchId), 
-   ]); 
- 
-   const matchInfoRaw = 
-     matchInfoRes.status === "fulfilled" ? matchInfoRes.value : {}; 
-   const matchScorecardRaw = 
-     matchScorecardRes.status === "fulfilled" ? matchScorecardRes.value : {}; 
- 
-   const transformed = buildMatchDetails({ 
-     matchId, 
-     matchInfoRaw, 
-     matchScorecardRaw, 
-   }); 
-
-   if (transformed) {
-     matchDetailsCache.set(matchId, { data: transformed, timestamp: now });
-   }
-
-   return transformed;
+   return null;
  } 
+ 
+ // Compatibility helpers for server.js
+ export function getPollInterval(hasLiveMatch) {
+   return POLL_INTERVAL;
+ }
+ 
+ export function getCurrentPollingMode() {
+   return "live";
+ }
+ 
+ export function setCurrentPollingMode(mode) {
+   // No-op for now as we have a fixed interval
+ }
+ 
+ export function isMatchLive(match) {
+   return match.matchStarted && !match.matchEnded;
+ }

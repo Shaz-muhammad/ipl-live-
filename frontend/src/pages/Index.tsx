@@ -19,6 +19,13 @@ type MatchWithState = Match & {
   matchState?: string;
 };
 
+type ApiStatus = "live" | "no-match" | "paused" | "unavailable";
+
+type LiveScoreResponse = {
+  apiStatus: ApiStatus;
+  data: MergedMatch[];
+};
+
 const Index = () => {
   const [showWatchLive, setShowWatchLive] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
@@ -28,7 +35,7 @@ const Index = () => {
 
   const [cricMatches, setCricMatches] = useState<MergedMatch[]>([]);
   const [lastValidMatches, setLastValidMatches] = useState<MergedMatch[]>([]);
-  const [apiStatus, setApiStatus] = useState<"live" | "no-match" | "paused" | "unavailable">("live");
+  const [apiStatus, setApiStatus] = useState<ApiStatus>("live");
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
 
@@ -44,10 +51,10 @@ const Index = () => {
       console.log("✅ Connected to backend");
     });
 
-    const onLiveScores = (response: { apiStatus: any; data: MergedMatch[] } | MergedMatch[]) => {
+    const onLiveScores = (response: LiveScoreResponse | MergedMatch[]) => {
       console.log("🔥 Live data received:", response);
 
-      let status: any = "live";
+      let status: ApiStatus = "live";
       let data: MergedMatch[] = [];
 
       if (Array.isArray(response)) {
@@ -58,8 +65,8 @@ const Index = () => {
       }
 
       setApiStatus(status);
-      
-      if (data && data.length > 0) {
+
+      if (data.length > 0) {
         setCricMatches(data);
         setLastValidMatches(data);
       } else {
@@ -94,8 +101,8 @@ const Index = () => {
         const match = m as MatchWithState;
 
         return (
-          match?.status?.toLowerCase().includes("live") ||
           match?.matchState === "live" ||
+          match?.status?.toLowerCase().includes("live") ||
           Boolean(match?.team1Score) ||
           Boolean(match?.team2Score)
         );
