@@ -1,18 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-/**
- * Adsterra and Google AdSense Coexistence Policy:
- * 1. Google AdSense and non-Google ads can coexist on the same page.
- * 2. However, to stay policy-safe, Adsterra popunders MUST remain disabled
- *    on any page that actively displays Google AdSense units.
- * 3. Use the window.__ENABLE_ADSTERRA_POPUNDER__ flag in index.html to 
- *    control popunder visibility globally.
- */
 import axios from "axios";
 import { io } from "socket.io-client";
 import { Header } from "@/components/Header";
-import HeroMatchCard from "@/components/HeroMatchCard";
-import GoogleAdSense from "@/components/GoogleAdSense";
-import AdsterraBanner from "@/components/AdsterraBanner";
+import { HeroMatchCard } from "@/components/HeroMatchCard";
 import MatchCard from "@/components/MatchCard";
 import { SectionHeader } from "@/components/SectionHeader";
 import { BlogSection } from "@/components/BlogSection";
@@ -20,13 +10,10 @@ import { Footer } from "@/components/Footer";
 import { WatchLiveModal } from "@/components/WatchLiveModal";
 import { AdminPanel } from "@/components/AdminPanel";
 import { useTeamTheme } from "@/hooks/useTeamTheme";
+import { AdSenseContainer } from "@/components/AdSenseContainer";
 import type { Match } from "@/types/match";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
-
-const toMatchArray = (value: unknown): Match[] => {
-  return Array.isArray(value) ? (value as Match[]) : [];
-};
 
 const Index = () => {
   const [showWatchLive, setShowWatchLive] = useState(false);
@@ -38,10 +25,9 @@ const Index = () => {
   const { resetTheme } = useTeamTheme();
 
   const liveMatches = useMemo(() => {
-    return matches.filter((m) => {
+    return matches.filter(m => {
       const state = (m.matchState || "").toLowerCase();
       const status = (m.status || "").toLowerCase();
-
       return (
         state === "in progress" ||
         status.includes("need") ||
@@ -53,7 +39,7 @@ const Index = () => {
   }, [matches]);
 
   const selectedMatch = useMemo(() => {
-    return matches.find((m) => m.id === selectedMatchId);
+    return matches.find(m => m.id === selectedMatchId);
   }, [matches, selectedMatchId]);
 
   const heroMatch = useMemo(() => {
@@ -65,7 +51,7 @@ const Index = () => {
 
   const listMatches = useMemo(() => {
     if (!heroMatch) return matches;
-    return matches.filter((m) => m.id !== heroMatch.id);
+    return matches.filter(m => m.id !== heroMatch.id);
   }, [matches, heroMatch]);
 
   useEffect(() => {
@@ -81,8 +67,8 @@ const Index = () => {
   useEffect(() => {
     const fetchMatches = async () => {
       try {
-        const response = await axios.get<Match[]>(`${API_BASE}/live-scores`);
-        setMatches(toMatchArray(response.data));
+        const response = await axios.get(`${API_BASE}/live-scores`);
+        setMatches(Array.isArray(response.data) ? response.data : []);
       } catch (error) {
         console.error("Failed to fetch matches:", error);
       } finally {
@@ -98,9 +84,9 @@ const Index = () => {
       console.log("✅ Connected to socket");
     });
 
-    socket.on("liveScores", (data: unknown) => {
+    socket.on("liveScores", (data: Match[]) => {
       console.log("MATCHES UPDATE (Live):", data);
-      setMatches(toMatchArray(data));
+      setMatches(Array.isArray(data) ? data : []);
     });
 
     return () => {
@@ -128,12 +114,17 @@ const Index = () => {
         {heroMatch && (
           <section>
             <HeroMatchCard match={heroMatch} />
-            
-            <div className="mt-6 mx-auto w-full max-w-[728px] min-h-[90px]">
-              <GoogleAdSense
-                adSlot="REPLACE_WITH_REAL_SLOT_ID" // TODO: Replace with real AdSense slot ID
-                className="w-full"
-                style={{ minHeight: "90px" }}
+
+            <div className="mt-6 flex justify-center">
+              <AdSenseContainer
+                slot="LIVE_SECTION_AD"
+                style={{
+                  display: "block",
+                  width: "100%",
+                  maxWidth: "728px",
+                  height: "90px",
+                }}
+                className="min-h-[90px]"
               />
             </div>
           </section>
@@ -143,14 +134,12 @@ const Index = () => {
           <section className="space-y-6">
             <SectionHeader icon="🏏" title="Live & Recent Matches" />
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {listMatches.map((m, i) => (
-                <div key={m.id}>
-                  <MatchCard
-                    match={m}
-                    onClick={() => setSelectedMatchId(m.id)}
-                  />
-                  {i === 2 && <AdsterraBanner />}
-                </div>
+              {listMatches.map((m) => (
+                <MatchCard
+                  key={m.id}
+                  match={m}
+                  onClick={() => setSelectedMatchId(m.id)}
+                />
               ))}
             </div>
           </section>

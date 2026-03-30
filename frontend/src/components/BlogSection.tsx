@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Newspaper, ChevronRight, Info } from "lucide-react";
 import { BlogCard, type Blog } from "./BlogCard";
 import { SectionHeader } from "./SectionHeader";
-import GoogleAdSense from "./GoogleAdSense";
+import { AdSenseContainer } from "./AdSenseContainer";
 import { api } from "@/services/api";
 
 const CACHE_KEY = "ipl_latest_news_cache";
@@ -105,9 +105,8 @@ export function BlogSection() {
                 <div className="flex justify-center items-center py-4 bg-secondary/5 border border-dashed border-border/20 rounded-xl min-h-[150px]">
                   <div className="text-center w-full">
                     <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-2">Advertisement</p>
-                    {/* TODO: Replace with real AdSense slot ID when available */}
-                    <GoogleAdSense 
-                      adSlot="REPLACE_WITH_REAL_SLOT_ID" 
+                    <AdSenseContainer 
+                      slot="BLOG_INLINE_AD" 
                       style={{ display: "block", width: "100%", height: "90px" }}
                       className="mx-auto"
                     />

@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Shield, Tv, RotateCcw } from "lucide-react";
-import GoogleAdSense from "@/components/GoogleAdSense";
+import { AdSenseContainer } from "./AdSenseContainer";
 
 interface Props {
   onAdminClick?: () => void;
@@ -62,10 +62,10 @@ export function Header({
 
       {/* Top Banner Ad */}
       <div className="w-full flex justify-center py-2 bg-black/40 backdrop-blur-sm border-b border-border/20">
-        <GoogleAdSense 
-          adSlot="REPLACE_WITH_REAL_SLOT_ID" 
-          className="w-full max-w-[728px]"
-          style={{ minHeight: "90px" }}
+        <AdSenseContainer 
+          slot="TOP_BANNER_SLOT" 
+          style={{ display: "block", width: "100%", maxWidth: "728px", height: "90px" }}
+          className="min-h-[90px]"
         />
       </div>
     </header>

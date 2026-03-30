@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, ExternalLink, Tv, ArrowRight } from "lucide-react";
 import { api } from "@/services/api";
 import { useEffect, useMemo, useState } from "react";
-import GoogleAdSense from "./GoogleAdSense";
+import { AdSenseContainer } from "./AdSenseContainer";
 
 interface Props {
   open: boolean;
@@ -75,7 +75,7 @@ export function WatchLiveModal({ open, onClose }: Props) {
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
-            className="glass-card neon-border p-6 w-full max-w-lg max-h-[80vh] overflow-y-auto"
+            className="glass-card neon-border p-6 w-full max-lg max-h-[80vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-6">
@@ -98,8 +98,8 @@ export function WatchLiveModal({ open, onClose }: Props) {
                 <div className="text-center space-y-2">
                   <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Advertisement</p>
                   <div className="glass-card p-4 bg-secondary/10 border border-dashed border-border/20 rounded-xl min-w-[300px] min-h-[250px] flex items-center justify-center">
-                    <GoogleAdSense 
-                      adSlot="REPLACE_WITH_REAL_SLOT_ID" 
+                    <AdSenseContainer 
+                      slot="INTERSTITIAL_AD" 
                       style={{ display: "block", width: "300px", height: "250px" }}
                       className="mx-auto"
                     />
