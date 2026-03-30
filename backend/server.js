@@ -46,7 +46,10 @@ function normalizeName(name = "") {
 }
 
 function teamsMatch(scheduleMatch, apiMatch) {
-  const apiTeams = (apiMatch.teams || []).map(normalizeName);
+  const apiTeams = [
+    normalizeName(apiMatch.team1 || ""),
+    normalizeName(apiMatch.team2 || ""),
+  ];
 
   return (
     apiTeams.includes(normalizeName(scheduleMatch.homeTeam)) &&
@@ -58,7 +61,7 @@ function mergeScheduleWithLive(schedule, liveMatches) {
   // 1. Start with all live matches from the API (the most reliable source for current data)
   const apiMatches = liveMatches.map((live) => {
     // Try to find enrichment data from the static schedule
-    const fixture = schedule.find((f) => teamsMatch(fixture, live));
+    const fixture = schedule.find((f) => teamsMatch(f, live));
     
     const team1Data = resolveTeam(live.team1 || fixture?.homeTeam);
     const team2Data = resolveTeam(live.team2 || fixture?.awayTeam);
