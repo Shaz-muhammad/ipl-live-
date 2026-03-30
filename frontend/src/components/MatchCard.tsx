@@ -32,12 +32,25 @@ export default function MatchCard({ match, onClick }: MatchCardProps) {
   const team1Score = match.team1Score || "—";
   const team2Score = match.team2Score || "—";
 
-  const status = match.status || match.result || "Live";
   const venue = match.venue || "TBA";
   const matchState = match.matchState || "Live";
 
-  const isRequirement = status.toLowerCase().includes("need") || status.toLowerCase().includes("require");
-  const isResult = status.toLowerCase().includes("won") || status.toLowerCase().includes("tied") || status.toLowerCase().includes("drawn") || status.toLowerCase().includes("no result");
+  const state = (match.matchState || "").toLowerCase();
+  const rawStatus = (match.status || "").trim();
+
+  const isLive =
+    state.includes("progress") ||
+    rawStatus.toLowerCase().includes("need") ||
+    rawStatus.toLowerCase().includes("opt") ||
+    Boolean(match.team1Score) ||
+    Boolean(match.team2Score);
+
+  const bottomStatus = isLive
+    ? rawStatus ||
+      (match.tossWinner?.trim() && match.tossChoice?.trim()
+        ? `${match.tossWinner} won the toss and chose to ${match.tossChoice}`
+        : "")
+    : "";
 
   return (
     <motion.div
@@ -124,20 +137,16 @@ export default function MatchCard({ match, onClick }: MatchCardProps) {
         </div>
       </div>
 
-      <div className={`mt-4 border-t border-white/10 pt-3`}>
-        <div className="flex items-center gap-1.5">
-          {isRequirement && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-400" />}
-          <p className={`line-clamp-2 text-sm font-medium ${
-            isRequirement 
-              ? "text-amber-300" 
-              : isResult 
-                ? "text-emerald-300" 
-                : "text-gray-400"
-          }`}>
-            {status}
-          </p>
+      {bottomStatus && (
+        <div className="mt-4 border-t border-white/10 pt-3">
+          <div className="flex items-center gap-1.5">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
+            <p className="line-clamp-2 text-sm font-medium text-emerald-300">
+              {bottomStatus}
+            </p>
+          </div>
         </div>
-      </div>
+      )}
     </motion.div>
   );
 }

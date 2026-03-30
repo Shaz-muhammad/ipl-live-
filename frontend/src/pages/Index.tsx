@@ -96,17 +96,15 @@ const Index = () => {
       result = selectedMatch;
     } else if (liveMatches.length > 0) {
       result = liveMatches[0];
-    } else if (matches.length > 0) {
-      result = matches[0];
     }
     console.log("CALCULATED HERO MATCH:", result);
     return result;
-  }, [selectedMatch, liveMatches, matches]);
+  }, [selectedMatch, liveMatches]);
 
   const listMatches = useMemo(() => {
-    if (!heroMatch) return matches;
-    return matches.filter((m) => m.id !== heroMatch.id);
-  }, [matches, heroMatch]);
+    if (!heroMatch) return liveMatches;
+    return liveMatches.filter((m) => m.id !== heroMatch.id);
+  }, [liveMatches, heroMatch]);
 
   useEffect(() => {
     if (heroMatch) {

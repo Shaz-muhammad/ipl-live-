@@ -55,6 +55,28 @@ const formatOvers = (overs?: string): string => {
   return safeOvers ? `(${safeOvers})` : "";
 };
 
+const getLiveHeadline = (match: Match): string => {
+  const state = (match.matchState || "").toLowerCase();
+  const status = (match.status || "").trim();
+
+  const isLive =
+    state.includes("progress") ||
+    status.toLowerCase().includes("need") ||
+    status.toLowerCase().includes("opt") ||
+    Boolean(match.team1Score) ||
+    Boolean(match.team2Score);
+
+  if (!isLive) return "";
+
+  if (status) return status;
+
+  if (match.tossWinner?.trim() && match.tossChoice?.trim()) {
+    return `${match.tossWinner} won the toss and chose to ${match.tossChoice}`;
+  }
+
+  return "Live updates available";
+};
+
 const HeroMatchCard = ({ match }: HeroMatchCardProps) => {
   if (!match) {
     return (
@@ -73,14 +95,11 @@ const HeroMatchCard = ({ match }: HeroMatchCardProps) => {
   const team1Score = match.team1Score || "—";
   const team2Score = match.team2Score || "—";
 
-  const status = match.status || match.result || "Live Match";
   const venue = match.venue || "TBA";
   const matchState = match.matchState || "Live";
+  const headline = getLiveHeadline(match);
 
-  const isRequirement = status.toLowerCase().includes("need") || status.toLowerCase().includes("require");
-  const isResult = status.toLowerCase().includes("won") || status.toLowerCase().includes("tied") || status.toLowerCase().includes("drawn") || status.toLowerCase().includes("no result");
-
-  console.log("RENDERING HERO MATCH CARD WITH:", { team1Name, team2Name, team1Score, team2Score, status });
+  console.log("RENDERING HERO MATCH CARD WITH:", { team1Name, team2Name, team1Score, team2Score, headline });
 
   return (
     <motion.div
@@ -171,26 +190,16 @@ const HeroMatchCard = ({ match }: HeroMatchCardProps) => {
         </div>
       </div>
 
-      <div className={`mt-6 rounded-2xl border p-4 ${
-        isRequirement 
-          ? "border-amber-400/20 bg-amber-500/10" 
-          : isResult 
-            ? "border-emerald-400/20 bg-emerald-500/10"
-            : "border-white/10 bg-white/5"
-      }`}>
-        <div className="flex items-center gap-2">
-          {isRequirement && <span className="flex h-2 w-2 animate-pulse rounded-full bg-amber-400" />}
-          <p className={`text-base font-medium ${
-            isRequirement 
-              ? "text-amber-300" 
-              : isResult 
-                ? "text-emerald-300" 
-                : "text-gray-300"
-          }`}>
-            {status}
-          </p>
+      {headline && (
+        <div className="mt-6 rounded-2xl border border-emerald-400/10 bg-emerald-500/5 p-4">
+          <div className="flex items-center gap-2">
+            <span className="flex h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
+            <p className="text-base font-medium text-emerald-300">
+              {headline}
+            </p>
+          </div>
         </div>
-      </div>
+      )}
     </motion.div>
   );
 };
