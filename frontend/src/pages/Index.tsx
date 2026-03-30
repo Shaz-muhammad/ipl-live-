@@ -39,17 +39,12 @@ const extractMatches = (payload: unknown): Match[] => {
 };
 
 const Index = () => {
-  const [hasMounted, setHasMounted] = useState(false);
   const [showWatchLive, setShowWatchLive] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
   const [matches, setMatches] = useState<Match[]>([]);
   const [apiStatus, setApiStatus] = useState<string>("no-match");
   const [loading, setLoading] = useState(true);
   const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
-
-  useEffect(() => {
-    setHasMounted(true);
-  }, []);
 
   const { resetTheme } = useTeamTheme();
 
@@ -152,8 +147,6 @@ const Index = () => {
   useEffect(() => {
     console.log("MATCHES STATE CHANGED:", matches);
   }, [matches]);
-
-  if (!hasMounted) return null;
 
   return (
     <div className="min-h-screen bg-background">
