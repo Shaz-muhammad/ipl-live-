@@ -13,8 +13,6 @@ import { useTeamTheme } from "@/hooks/useTeamTheme";
 import { AdSenseContainer } from "@/components/AdSenseContainer";
 import type { Match } from "@/types/match";
 
-type ApiStatus = "live" | "no-match" | "paused" | "unavailable";
-
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 const Index = () => {
@@ -24,12 +22,13 @@ const Index = () => {
   const [loading, setLoading] = useState(true);
   const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
 
-  const { setTeamTheme, resetTheme } = useTeamTheme();
+  const { resetTheme } = useTeamTheme();
 
   const liveMatches = useMemo(() => {
     return matches.filter((m) => {
       const state = (m.matchState || "").toLowerCase();
       const status = (m.status || "").toLowerCase();
+
       return (
         state === "in progress" ||
         status.includes("need") ||
@@ -56,7 +55,6 @@ const Index = () => {
     return matches.filter((m) => m.id !== heroMatch.id);
   }, [matches, heroMatch]);
 
-  // 🧠 SEO Optimization
   useEffect(() => {
     if (heroMatch) {
       const t1 = heroMatch.team1Short || heroMatch.team1;
@@ -68,7 +66,6 @@ const Index = () => {
   }, [heroMatch]);
 
   useEffect(() => {
-    // Initial fetch
     const fetchMatches = async () => {
       try {
         const response = await axios.get(`${API_BASE}/live-scores`);
@@ -82,7 +79,6 @@ const Index = () => {
 
     fetchMatches();
 
-    // Socket connection
     const socket = io(API_BASE);
 
     socket.on("connect", () => {
@@ -99,14 +95,6 @@ const Index = () => {
     };
   }, []);
 
-  const handleTeamClick = (
-    teamId: string,
-    primary: string,
-    secondary: string,
-  ) => {
-    setTeamTheme(teamId, primary, secondary);
-  };
-
   return (
     <div className="min-h-screen bg-background">
       <Header
@@ -117,8 +105,8 @@ const Index = () => {
 
       <main className="container mx-auto px-4 py-6 space-y-10 pb-24">
         {loading && (
-          <div className="text-center py-6">
-            <p className="text-sm text-primary animate-pulse">
+          <div className="py-6 text-center">
+            <p className="animate-pulse text-sm text-primary">
               ⏳ Fetching matches...
             </p>
           </div>
@@ -126,10 +114,9 @@ const Index = () => {
 
         {heroMatch && (
           <section>
-            <HeroMatchCard match={heroMatch} onTeamClick={handleTeamClick} />
+            <HeroMatchCard match={heroMatch} />
 
-            {/* Ad below Hero Section */}
-            <div className="flex justify-center mt-6">
+            <div className="mt-6 flex justify-center">
               <AdSenseContainer
                 slot="LIVE_SECTION_AD"
                 style={{
@@ -160,11 +147,11 @@ const Index = () => {
         )}
 
         {!loading && matches.length === 0 && (
-          <div className="text-center py-20 glass-card rounded-2xl border border-border/50 max-w-lg mx-auto">
-            <p className="text-lg font-heading font-bold text-muted-foreground">
+          <div className="mx-auto max-w-lg rounded-2xl border border-border/50 glass-card py-20 text-center">
+            <p className="font-heading text-lg font-bold text-muted-foreground">
               No IPL matches found
             </p>
-            <p className="text-xs text-muted-foreground/60 mt-2">
+            <p className="mt-2 text-xs text-muted-foreground/60">
               Stay tuned for upcoming live action!
             </p>
           </div>
@@ -175,16 +162,16 @@ const Index = () => {
 
       <Footer />
 
-      <div className="fixed bottom-0 left-0 right-0 z-40 glass-card border-t border-border/50 p-3 flex gap-3 sm:hidden">
+      <div className="fixed bottom-0 left-0 right-0 z-40 flex gap-3 border-t border-border/50 glass-card p-3 sm:hidden">
         <button
           onClick={() => setShowWatchLive(true)}
-          className="flex-1 rounded-lg bg-destructive/20 text-neon-red py-2 text-xs font-heading font-bold"
+          className="flex-1 rounded-lg bg-destructive/20 py-2 text-xs font-heading font-bold text-neon-red"
         >
           📺 Watch Live
         </button>
         <button
           onClick={() => setShowAdmin(true)}
-          className="flex-1 rounded-lg bg-secondary text-secondary-foreground py-2 text-xs font-heading font-bold"
+          className="flex-1 rounded-lg bg-secondary py-2 text-xs font-heading font-bold text-secondary-foreground"
         >
           🔐 Admin
         </button>
