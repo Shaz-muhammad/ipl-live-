@@ -1,9 +1,11 @@
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import type { Match } from "../types/match";
 import {
   formatOvers,
   formatStatus,
   getInitials,
+  isLiveLike,
   getTeamLabel,
   safeText,
 } from "../utils/matchHelpers";
@@ -30,6 +32,7 @@ export default function HeroMatchCard({ match }: HeroMatchCardProps) {
   const status = formatStatus(match);
   const venue = safeText(match.venue, "Venue not available");
   const matchState = safeText(match.matchState, "Match");
+  const isLive = isLiveLike(match);
 
   return (
     <motion.div

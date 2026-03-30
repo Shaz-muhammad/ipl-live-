@@ -13,7 +13,7 @@ import { useTeamTheme } from "@/hooks/useTeamTheme";
 import { AdSenseContainer } from "@/components/AdSenseContainer";
 import type { Match } from "@/types/match";
 
-type ApiStatus = "live" | "no-match" | "paused" | "unavailable"; 
+type ApiStatus = "live" | "no-match" | "paused" | "unavailable";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
@@ -27,7 +27,7 @@ const Index = () => {
   const { setTeamTheme, resetTheme } = useTeamTheme();
 
   const liveMatches = useMemo(() => {
-    return matches.filter(m => {
+    return matches.filter((m) => {
       const state = (m.matchState || "").toLowerCase();
       const status = (m.status || "").toLowerCase();
       return (
@@ -41,7 +41,7 @@ const Index = () => {
   }, [matches]);
 
   const selectedMatch = useMemo(() => {
-    return matches.find(m => m.id === selectedMatchId);
+    return matches.find((m) => m.id === selectedMatchId);
   }, [matches, selectedMatchId]);
 
   const heroMatch = useMemo(() => {
@@ -53,7 +53,7 @@ const Index = () => {
 
   const listMatches = useMemo(() => {
     if (!heroMatch) return matches;
-    return matches.filter(m => m.id !== heroMatch.id);
+    return matches.filter((m) => m.id !== heroMatch.id);
   }, [matches, heroMatch]);
 
   // 🧠 SEO Optimization
@@ -84,7 +84,7 @@ const Index = () => {
 
     // Socket connection
     const socket = io(API_BASE);
-    
+
     socket.on("connect", () => {
       console.log("✅ Connected to socket");
     });
@@ -118,22 +118,26 @@ const Index = () => {
       <main className="container mx-auto px-4 py-6 space-y-10 pb-24">
         {loading && (
           <div className="text-center py-6">
-            <p className="text-sm text-primary animate-pulse">⏳ Fetching matches...</p>
+            <p className="text-sm text-primary animate-pulse">
+              ⏳ Fetching matches...
+            </p>
           </div>
         )}
 
         {heroMatch && (
           <section>
-            <HeroMatchCard 
-              match={heroMatch} 
-              onTeamClick={handleTeamClick} 
-            />
+            <HeroMatchCard match={heroMatch} onTeamClick={handleTeamClick} />
 
             {/* Ad below Hero Section */}
             <div className="flex justify-center mt-6">
-              <AdSenseContainer 
-                slot="LIVE_SECTION_AD" 
-                style={{ display: "block", width: "100%", maxWidth: "728px", height: "90px" }}
+              <AdSenseContainer
+                slot="LIVE_SECTION_AD"
+                style={{
+                  display: "block",
+                  width: "100%",
+                  maxWidth: "728px",
+                  height: "90px",
+                }}
                 className="min-h-[90px]"
               />
             </div>
