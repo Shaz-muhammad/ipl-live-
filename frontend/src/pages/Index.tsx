@@ -53,18 +53,22 @@ const Index = () => {
       const state = (m.matchState || "").toLowerCase();
       const status = (m.status || "").toLowerCase();
 
-      if (state === "complete" || status.includes("won by")) {
-        return false;
+      // Always include if explicitly marked as live or in progress
+      if (state.includes("progress") || state.includes("live") || m.status === "live") {
+        return true;
       }
 
-      return (
-        state.includes("progress") ||
-        state.includes("live") ||
-        status.includes("need") ||
-        status.includes("opt") ||
-        Boolean(m.team1Score) ||
-        Boolean(m.team2Score)
-      );
+      // Fallback: include if there is any score reported
+      if (Boolean(m.team1Score) || Boolean(m.team2Score)) {
+        return true;
+      }
+
+      // Fallback: include if status indicates active play
+      if (status.includes("need") || status.includes("opt") || status.includes("chose")) {
+        return true;
+      }
+
+      return false;
     });
   }, [matches]);
 

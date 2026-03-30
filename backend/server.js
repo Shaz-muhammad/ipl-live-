@@ -55,82 +55,33 @@ function teamsMatch(scheduleMatch, apiMatch) {
 }
 
 function mergeScheduleWithLive(schedule, liveMatches) {
-  const now = new Date();
+  // 1. Start with all live matches from the API (the most reliable source for current data)
+  const apiMatches = liveMatches.map((live) => {
+    // Try to find enrichment data from the static schedule
+    const fixture = schedule.find((f) => teamsMatch(fixture, live));
+    
+    const team1Data = resolveTeam(live.team1 || fixture?.homeTeam);
+    const team2Data = resolveTeam(live.team2 || fixture?.awayTeam);
 
-  const merged = schedule.map((fixture) => {
-    const live = liveMatches.find((m) => teamsMatch(fixture, m));
+    return {
+      ...live,
+      // Ensure flat strings for frontend
+      team1: live.team1 || fixture?.homeTeam || "Team 1",
+      team2: live.team2 || fixture?.awayTeam || "Team 2",
+      team1Short: team1Data?.shortName || live.team1Short || fixture?.homeTeam,
+      team2Short: team2Data?.shortName || live.team2Short || fixture?.awayTeam,
+      team1Logo: team1Data?.logo || live.team1Logo || "🏏",
+      team2Logo: team2Data?.logo || live.team2Logo || "🏏",
+      venue: live.venue || fixture?.venue || "Venue",
+      status: "live",
+      matchState: live.matchState || "In Progress",
+    };
+  });
 
-    if (live) {
-      const team1Data = resolveTeam(fixture.homeTeam);
-      const team2Data = resolveTeam(fixture.awayTeam);
-      const team1ScoreObj = (live.score || []).find(s => s.inning.toLowerCase().includes(fixture.homeTeam.toLowerCase())) || {};
-      const team2ScoreObj = (live.score || []).find(s => s.inning.toLowerCase().includes(fixture.awayTeam.toLowerCase())) || {};
-      
-      const team1Score = team1ScoreObj.r ? `${team1ScoreObj.r}/${team1ScoreObj.w}` : "";
-      const team2Score = team2ScoreObj.r ? `${team2ScoreObj.r}/${team2ScoreObj.w}` : "";
+  // 2. Sort to prioritize actively started matches
+  apiMatches.sort((a, b) => (a.team1Score || a.team2Score ? -1 : 1));
 
-      // Calculate CRR/RRR if possible
-      let crr = "0";
-      let rrr = "0";
-      let target = 0;
-      const scoreArr = live.score || [];
-      if (scoreArr.length >= 1) {
-        const activeInnings = scoreArr[scoreArr.length - 1];
-        const activeRuns = Number(activeInnings?.r ?? activeInnings?.R ?? 0);
-        const activeOvers = Number(activeInnings?.o ?? activeInnings?.O ?? 0);
-        if (activeOvers > 0) crr = (activeRuns / activeOvers).toFixed(2);
-        
-        if (scoreArr.length === 2) {
-          const firstInnings = scoreArr[0];
-          target = Number(firstInnings?.r ?? firstInnings?.R ?? 0) + 1;
-          const runsRemaining = target - activeRuns;
-          const oversRemaining = 20 - activeOvers;
-          if (oversRemaining > 0 && runsRemaining > 0) rrr = (runsRemaining / oversRemaining).toFixed(2);
-        }
-      }
-
-      return {
-        ...fixture,
-        apiId: live.id,
-        team1: fixture.homeTeam,
-        team2: fixture.awayTeam,
-        team1Short: team1Data?.shortName || fixture.homeTeam,
-        team2Short: team2Data?.shortName || fixture.awayTeam,
-        team1Logo: team1Data?.logo || "🏏",
-        team2Logo: team2Data?.logo || "🏏",
-        team1Score,
-        team2Score,
-        team1Overs: team1ScoreObj.o || "",
-        team2Overs: team2ScoreObj.o || "",
-        score: team1Score || team2Score ? `${team1Score} vs ${team2Score}` : "—",
-        overs: scoreArr[scoreArr.length - 1]?.o || "",
-        status: isMatchLive(live) ? "live" : (live.matchEnded ? "finished" : "upcoming"),
-        statusText: live.status || "Live",
-        matchStarted: !!live.matchStarted,
-        matchEnded: !!live.matchEnded,
-        venue: live.venue || fixture.venue,
-        tossWinner: live.tossWinner || "",
-        tossChoice: live.tossChoice || "",
-        result: live.matchEnded ? (live.status || "Match Completed") : "",
-        target,
-        currentInnings: scoreArr.length === 2 ? "2nd Innings" : (scoreArr.length === 1 ? "1st Innings" : ""),
-        currentRunRate: crr,
-        requiredRunRate: rrr,
-        crr,
-        rrr,
-        matchState: live.matchEnded ? "Completed" : (isMatchLive(live) ? "In Progress" : "Scheduled"),
-        commentary: [], // Only available in match details
-      };
-    }
-
-    // Filter out all matches that are not currently live
-    return null;
-  }).filter(Boolean);
-
-  // Since we only have live matches, sorting is simplified
-  merged.sort((a, b) => (a.matchStarted ? -1 : 1));
-
-  return merged;
+  return apiMatches;
 }
 
 async function start() {
