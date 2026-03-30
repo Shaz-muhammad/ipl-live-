@@ -76,7 +76,7 @@ function mergeScheduleWithLive(schedule, liveMatches) {
       team1Logo: team1Data?.logo || live.team1Logo || "🏏",
       team2Logo: team2Data?.logo || live.team2Logo || "🏏",
       venue: live.venue || fixture?.venue || "Venue",
-      status: "live",
+      status: live.status || "In Progress",
       matchState: live.matchState || "In Progress",
     };
   });
