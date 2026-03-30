@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
+import AdminSecretPage from "./pages/AdminSecretPage";
 import NotFound from "./pages/NotFound";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import ClientOnly from "@/components/ClientOnly";
@@ -40,6 +41,7 @@ const App = () => (
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                <Route path="/admin-secret-2026" element={<AdminSecretPage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>

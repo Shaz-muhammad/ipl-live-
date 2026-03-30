@@ -48,6 +48,20 @@ const Index = () => {
 
   const { resetTheme } = useTeamTheme();
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.ctrlKey && event.shiftKey && event.key.toLowerCase() === "a") {
+        setShowAdmin(true);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
   const liveMatches = useMemo(() => {
     return matches.filter((m) => {
       const state = (m.matchState || "").toLowerCase();
@@ -155,9 +169,9 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header
-        onAdminClick={() => setShowAdmin(true)}
         onWatchLiveClick={() => setShowWatchLive(true)}
         onResetTheme={resetTheme}
+        onLogoClick={() => setShowAdmin(true)}
       />
 
       <main className="container mx-auto px-4 py-6 space-y-10 pb-24">
@@ -212,12 +226,6 @@ const Index = () => {
           className="flex-1 rounded-lg bg-destructive/20 py-2 text-xs font-heading font-bold text-neon-red"
         >
           📺 Watch Live
-        </button>
-        <button
-          onClick={() => setShowAdmin(true)}
-          className="flex-1 rounded-lg bg-secondary py-2 text-xs font-heading font-bold text-secondary-foreground"
-        >
-          🔐 Admin
         </button>
       </div>
 
