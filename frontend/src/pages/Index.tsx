@@ -14,41 +14,6 @@ import type { Match } from "@/types/match";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
-const parseScore = (score?: string) => {
-  if (!score) return { runs: 0, wickets: 0 };
-  // Handle formats like "94/9" or just "94"
-  const parts = score.split("/");
-  const runs = parseInt(parts[0], 10);
-  const wickets = parts[1] ? parseInt(parts[1], 10) : 0;
-  return {
-    runs: Number.isFinite(runs) ? runs : 0,
-    wickets: Number.isFinite(wickets) ? wickets : 0,
-  };
-};
-
-const isNewerMatchState = (incoming: Match, current?: Match) => {
-  if (!current) return true;
-
-  // Compare Team 1 scores
-  const next1 = parseScore(incoming.team1Score);
-  const prev1 = parseScore(current.team1Score);
-
-  // Compare Team 2 scores
-  const next2 = parseScore(incoming.team2Score);
-  const prev2 = parseScore(current.team2Score);
-
-  // If either team has more runs, it's newer
-  if (next1.runs > prev1.runs || next2.runs > prev2.runs) return true;
-  
-  // If runs are same, check wickets (more wickets usually means later in game)
-  if (next1.runs === prev1.runs && next1.wickets > prev1.wickets) return true;
-  if (next2.runs === prev2.runs && next2.wickets > prev2.wickets) return true;
-
-  // If everything is same, or less, we consider it not newer (or equal)
-  return next1.runs === prev1.runs && next1.wickets === prev1.wickets && 
-         next2.runs === prev2.runs && next2.wickets === prev2.wickets;
-};
-
 const extractMatches = (payload: unknown): Match[] => {
   console.log("EXTRACTING MATCHES FROM PAYLOAD:", payload);
   if (!payload) return [];
@@ -77,7 +42,6 @@ const Index = () => {
   const [showWatchLive, setShowWatchLive] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
   const [matches, setMatches] = useState<Match[]>([]);
-  const [lastSequence, setLastSequence] = useState(0);
   const [apiStatus, setApiStatus] = useState<string>("no-match");
   const [loading, setLoading] = useState(true);
   const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
@@ -141,11 +105,6 @@ const Index = () => {
       try {
         const response = await axios.get(`${API_BASE}/live-scores`);
         console.log("FETCH RESPONSE:", response.data);
-        
-        if (response.data && typeof response.data === "object" && "sequence" in response.data) {
-          setLastSequence(Number(response.data.sequence));
-        }
-
         const parsed = extractMatches(response.data);
         console.log("PARSED FETCH MATCHES:", parsed);
         setMatches(parsed);
@@ -169,33 +128,9 @@ const Index = () => {
 
     socket.on("liveScores", (data: unknown) => {
       console.log("MATCHES UPDATE (Live):", data);
-
-      if (data && typeof data === "object" && "sequence" in data) {
-        const sequence = (data as { sequence?: number }).sequence ?? 0;
-        if (sequence < lastSequence) {
-          console.log("⏭️ Ignoring stale update:", sequence, "current:", lastSequence);
-          return;
-        }
-        setLastSequence(sequence);
-      }
-
-      const incoming = extractMatches(data);
-      console.log("PARSED SOCKET MATCHES:", incoming);
-
-      setMatches((prev) => {
-        // Apply safety check to prevent backward score updates per match
-        return incoming.map((nextMatch) => {
-          const currentMatch = prev.find((m) => m.id === nextMatch.id);
-          const isNewer = isNewerMatchState(nextMatch, currentMatch);
-          
-          if (!isNewer && currentMatch) {
-            console.warn(`⚠️ Blocking backward update for ${nextMatch.id}`);
-            return currentMatch;
-          }
-          return nextMatch;
-        });
-      });
-
+      const parsed = extractMatches(data);
+      console.log("PARSED SOCKET MATCHES:", parsed);
+      setMatches(parsed);
       if (data && typeof data === "object") {
         const payload = data as { apiStatus?: string };
         if (payload.apiStatus) {

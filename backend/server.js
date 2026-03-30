@@ -16,11 +16,9 @@ import { resolveTeam } from "./services/teamMap.js";
 
 // Global state for cached merged matches
 let latestMatches = [];
-let isPolling = false;
-let updateSequence = 0;
 
 export function getLatestMatches() {
-  return { matches: latestMatches, sequence: updateSequence };
+  return latestMatches;
 }
 
 function requireEnv(name) {
@@ -225,13 +223,6 @@ async function start() {
     let pollTimer = null;
 
     async function pollAndEmit() {
-      if (isPolling) {
-        console.log("⏭️ Skipping poll (already running)");
-        return;
-      }
-
-      isPolling = true;
-
       try {
         const payload = await fetchScores();
         const liveMatches = Array.isArray(payload?.data) ? payload.data : [];
@@ -243,19 +234,11 @@ async function start() {
         const mergedMatches = mergeScheduleWithLive(schedule, liveMatches);
 
         latestMatches = mergedMatches;
-        updateSequence += 1;
-
+        
         const apiStatus = payload.apiStatus || (mergedMatches.length > 0 ? "live" : "no-match");
 
-        // Emit to all clients with sequence number to prevent backward updates
-        io.emit("liveScores", {
-          apiStatus,
-          data: latestMatches,
-          sequence: updateSequence,
-          updatedAt: Date.now(),
-        });
-
-        console.log("📡 Emitted update seq:", updateSequence, "count:", latestMatches.length);
+        // Emit to all clients
+        io.emit("liveScores", { apiStatus, data: latestMatches });
 
         // Update polling mode based on live match status
         const hasLiveMatch = mergedMatches.length > 0;
@@ -274,14 +257,7 @@ async function start() {
         console.error("❌ [POLL] Socket poll error:", err?.message ?? err);
         // Fallback: emit last known matches even if fetch failed
         const apiStatus = latestMatches.length > 0 ? "live" : "no-match";
-        io.emit("liveScores", {
-          apiStatus,
-          data: latestMatches,
-          sequence: updateSequence,
-          updatedAt: Date.now(),
-        });
-      } finally {
-        isPolling = false;
+        io.emit("liveScores", { apiStatus, data: latestMatches });
       }
     }
 
@@ -289,12 +265,7 @@ async function start() {
       console.log("⚡ [SOCKET] Socket connected:", socket.id);
       // On connection, send cached data only. Do NOT trigger fetch per user.
       const apiStatus = latestMatches.length > 0 ? "live" : "no-match";
-      socket.emit("liveScores", {
-        apiStatus,
-        data: latestMatches,
-        sequence: updateSequence,
-        updatedAt: Date.now(),
-      });
+      socket.emit("liveScores", { apiStatus, data: latestMatches });
 
       socket.on("disconnect", () => {
         console.log("❌ [SOCKET] Client disconnected:", socket.id);
