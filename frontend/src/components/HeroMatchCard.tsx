@@ -77,6 +77,9 @@ const HeroMatchCard = ({ match }: HeroMatchCardProps) => {
   const venue = match.venue || "TBA";
   const matchState = match.matchState || "Live";
 
+  const isRequirement = status.toLowerCase().includes("need") || status.toLowerCase().includes("require");
+  const isResult = status.toLowerCase().includes("won") || status.toLowerCase().includes("tied") || status.toLowerCase().includes("drawn") || status.toLowerCase().includes("no result");
+
   console.log("RENDERING HERO MATCH CARD WITH:", { team1Name, team2Name, team1Score, team2Score, status });
 
   return (
@@ -91,7 +94,14 @@ const HeroMatchCard = ({ match }: HeroMatchCardProps) => {
           <p className="text-xs uppercase tracking-[0.2em] text-cyan-300">
             Featured Match
           </p>
-          <h2 className="mt-1 text-2xl font-bold text-white">{matchState}</h2>
+          <div className="flex items-center gap-3">
+            <h2 className="mt-1 text-2xl font-bold text-white">{matchState}</h2>
+            {match.target ? (
+              <span className="mt-1 rounded-md bg-white/10 px-2 py-0.5 text-xs font-medium text-gray-300">
+                Target: {match.target}
+              </span>
+            ) : null}
+          </div>
         </div>
 
         <div className="rounded-full bg-cyan-500/10 px-4 py-2 text-sm font-medium text-cyan-200">
@@ -161,11 +171,29 @@ const HeroMatchCard = ({ match }: HeroMatchCardProps) => {
         </div>
       </div>
 
-      <div className="mt-6 rounded-2xl border border-emerald-400/10 bg-emerald-500/5 p-4">
-        <p className="text-base font-medium text-emerald-300">{status}</p>
+      <div className={`mt-6 rounded-2xl border p-4 ${
+        isRequirement 
+          ? "border-amber-400/20 bg-amber-500/10" 
+          : isResult 
+            ? "border-emerald-400/20 bg-emerald-500/10"
+            : "border-white/10 bg-white/5"
+      }`}>
+        <div className="flex items-center gap-2">
+          {isRequirement && <span className="flex h-2 w-2 animate-pulse rounded-full bg-amber-400" />}
+          <p className={`text-base font-medium ${
+            isRequirement 
+              ? "text-amber-300" 
+              : isResult 
+                ? "text-emerald-300" 
+                : "text-gray-300"
+          }`}>
+            {status}
+          </p>
+        </div>
       </div>
     </motion.div>
   );
 };
+
 
 export default HeroMatchCard;

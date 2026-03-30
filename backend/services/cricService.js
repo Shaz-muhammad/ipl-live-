@@ -121,6 +121,9 @@ import axios from "axios";
    const team1Innings = score?.team1Score?.inngs1; 
    const team2Innings = score?.team2Score?.inngs1; 
  
+   // Extract target if available (usually team2's innings has it when chasing)
+   const target = team2Innings?.target || 0;
+
    return { 
      id: String(info?.matchId || ""), 
      team1: info?.team1?.teamName || "Team 1", 
@@ -140,6 +143,7 @@ import axios from "axios";
        : "", 
      team1Overs: team1Innings?.overs ? String(team1Innings.overs) : "", 
      team2Overs: team2Innings?.overs ? String(team2Innings.overs) : "", 
+     target: target,
      result: info?.status || "", 
      commentary: [], 
    }; 

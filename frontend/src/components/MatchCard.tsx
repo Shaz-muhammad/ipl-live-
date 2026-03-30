@@ -36,6 +36,9 @@ export default function MatchCard({ match, onClick }: MatchCardProps) {
   const venue = match.venue || "TBA";
   const matchState = match.matchState || "Live";
 
+  const isRequirement = status.toLowerCase().includes("need") || status.toLowerCase().includes("require");
+  const isResult = status.toLowerCase().includes("won") || status.toLowerCase().includes("tied") || status.toLowerCase().includes("drawn") || status.toLowerCase().includes("no result");
+
   return (
     <motion.div
       whileHover={{ y: -4, scale: 1.01 }}
@@ -44,9 +47,16 @@ export default function MatchCard({ match, onClick }: MatchCardProps) {
       className="cursor-pointer rounded-2xl border border-white/10 bg-white/5 p-4 shadow-lg backdrop-blur-md hover:border-cyan-400/40"
     >
       <div className="mb-3 flex items-center justify-between gap-3">
-        <span className="rounded-full bg-cyan-500/10 px-3 py-1 text-xs font-semibold text-cyan-300">
-          {matchState}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="rounded-full bg-cyan-500/10 px-3 py-1 text-xs font-semibold text-cyan-300">
+            {matchState}
+          </span>
+          {match.target ? (
+            <span className="rounded-md bg-white/10 px-1.5 py-0.5 text-[10px] font-medium text-gray-400">
+              T: {match.target}
+            </span>
+          ) : null}
+        </div>
         <span className="truncate text-xs text-gray-400">{venue}</span>
       </div>
 
@@ -114,9 +124,21 @@ export default function MatchCard({ match, onClick }: MatchCardProps) {
         </div>
       </div>
 
-      <div className="mt-4 border-t border-white/10 pt-3">
-        <p className="line-clamp-2 text-sm text-emerald-300">{status}</p>
+      <div className={`mt-4 border-t border-white/10 pt-3`}>
+        <div className="flex items-center gap-1.5">
+          {isRequirement && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-400" />}
+          <p className={`line-clamp-2 text-sm font-medium ${
+            isRequirement 
+              ? "text-amber-300" 
+              : isResult 
+                ? "text-emerald-300" 
+                : "text-gray-400"
+          }`}>
+            {status}
+          </p>
+        </div>
       </div>
     </motion.div>
   );
 }
+
