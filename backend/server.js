@@ -227,17 +227,16 @@ async function start() {
         const payload = await fetchScores();
         const liveMatches = Array.isArray(payload?.data) ? payload.data : [];
 
-        const schedule = await getIplSchedule();
-        const mergedMatches = mergeScheduleWithLive(schedule, liveMatches);
-
-        latestMatches = mergedMatches;
-        const apiStatus = payload.apiStatus || getApiStatus(mergedMatches);
+        // Simplified: use liveMatches directly from cricService.js as it's already normalized for IPL and live status
+        latestMatches = liveMatches;
+        
+        const apiStatus = payload.apiStatus || (liveMatches.length > 0 ? "live" : "no-match");
 
         // Emit to all clients
         io.emit("liveScores", { apiStatus, data: latestMatches });
 
         // Update polling mode based on live match status
-        const hasLiveMatch = mergedMatches.some((m) => m.status === "live");
+        const hasLiveMatch = liveMatches.length > 0;
         const nextInterval = getPollInterval(hasLiveMatch);
         const mode = hasLiveMatch ? "live" : "standby";
 
@@ -252,7 +251,7 @@ async function start() {
       } catch (err) {
         console.error("❌ [POLL] Socket poll error:", err?.message ?? err);
         // Fallback: emit last known matches even if fetch failed
-        const apiStatus = getApiStatus(latestMatches);
+        const apiStatus = latestMatches.length > 0 ? "live" : "no-match";
         io.emit("liveScores", { apiStatus, data: latestMatches });
       }
     }

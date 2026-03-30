@@ -71,28 +71,27 @@ import axios from "axios";
    return ( 
      seriesName.includes("indian premier league") || 
      seriesName.includes("ipl") || 
-     team1.includes("mumbai indians") || 
-     team1.includes("chennai super kings") || 
-     team1.includes("royal challengers bengaluru") || 
-     team1.includes("royal challengers bangalore") || 
-     team1.includes("kolkata knight riders") || 
-     team1.includes("sunrisers hyderabad") || 
+     seriesName.includes("t20") || // More lenient for IPL matches often categorized as T20
+     team1.includes("mumbai") || 
+     team1.includes("chennai") || 
+     team1.includes("royal challengers") || 
+     team1.includes("kolkata") || 
+     team1.includes("hyderabad") || 
      team1.includes("delhi capitals") || 
-     team1.includes("rajasthan royals") || 
-     team1.includes("punjab kings") || 
-     team1.includes("lucknow super giants") || 
-     team1.includes("gujarat titans") || 
-     team2.includes("mumbai indians") || 
-     team2.includes("chennai super kings") || 
-     team2.includes("royal challengers bengaluru") || 
-     team2.includes("royal challengers bangalore") || 
-     team2.includes("kolkata knight riders") || 
-     team2.includes("sunrisers hyderabad") || 
+     team1.includes("rajasthan") || 
+     team1.includes("punjab") || 
+     team1.includes("lucknow") || 
+     team1.includes("gujarat") || 
+     team2.includes("mumbai") || 
+     team2.includes("chennai") || 
+     team2.includes("royal challengers") || 
+     team2.includes("kolkata") || 
+     team2.includes("hyderabad") || 
      team2.includes("delhi capitals") || 
-     team2.includes("rajasthan royals") || 
-     team2.includes("punjab kings") || 
-     team2.includes("lucknow super giants") || 
-     team2.includes("gujarat titans") 
+     team2.includes("rajasthan") || 
+     team2.includes("punjab") || 
+     team2.includes("lucknow") || 
+     team2.includes("gujarat") 
    ); 
  } 
  
@@ -187,6 +186,11 @@ import axios from "axios";
 
      const iplMatches = allMatches.filter(isIPLMatch); 
      console.log(`IPL matches found: ${iplMatches.length}`);
+
+     // Log all IPL matches found before live filtering to help debug
+     iplMatches.forEach(m => {
+       console.log(`IPL Match: ${m.matchInfo?.team1?.teamName} vs ${m.matchInfo?.team2?.teamName} | State: ${m.matchInfo?.state} | Status: ${m.matchInfo?.status}`);
+     });
 
      const liveIPLMatches = iplMatches.filter(isLiveMatch); 
      console.log(`Live IPL matches found: ${liveIPLMatches.length}`);

@@ -44,6 +44,7 @@ const Index = () => {
   const [showWatchLive, setShowWatchLive] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
   const [matches, setMatches] = useState<Match[]>([]);
+  const [apiStatus, setApiStatus] = useState<string>("no-match");
   const [loading, setLoading] = useState(true);
   const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
 
@@ -103,6 +104,9 @@ const Index = () => {
         const parsed = extractMatches(response.data);
         console.log("PARSED FETCH MATCHES:", parsed);
         setMatches(parsed);
+        if (response.data && typeof response.data === "object" && "apiStatus" in response.data) {
+          setApiStatus(String(response.data.apiStatus));
+        }
       } catch (error) {
         console.error("Failed to fetch matches:", error);
       } finally {
@@ -123,6 +127,9 @@ const Index = () => {
       const parsed = extractMatches(data);
       console.log("PARSED SOCKET MATCHES:", parsed);
       setMatches(parsed);
+      if (data && typeof data === "object" && "apiStatus" in data) {
+        setApiStatus(String((data as any).apiStatus));
+      }
     });
 
     return () => {
@@ -171,10 +178,10 @@ const Index = () => {
         {!loading && matches.length === 0 && (
           <div className="mx-auto max-w-lg rounded-2xl border border-border/50 glass-card py-20 text-center">
             <p className="font-heading text-lg font-bold text-muted-foreground">
-              No IPL matches found
+              {apiStatus === "paused" ? "API is currently paused" : "No live IPL matches found"}
             </p>
             <p className="mt-2 text-xs text-muted-foreground/60">
-              Stay tuned for upcoming live action!
+              {apiStatus === "live" ? "Wait for the next live match update!" : "Stay tuned for upcoming live action!"}
             </p>
           </div>
         )}
