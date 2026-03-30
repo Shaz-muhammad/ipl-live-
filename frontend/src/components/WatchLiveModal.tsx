@@ -14,12 +14,10 @@ export function WatchLiveModal({ open, onClose }: Props) {
     Record<string, string[]>
   >({});
   const [loading, setLoading] = useState(false);
-  const [showAd, setShowAd] = useState(true);
 
   useEffect(() => {
     if (!open) {
       setLinksByMatchId({});
-      setShowAd(true); // Reset ad state when modal closes
       return;
     }
 
@@ -92,28 +90,7 @@ export function WatchLiveModal({ open, onClose }: Props) {
               </button>
             </div>
 
-            {showAd ? (
-              <div className="flex flex-col items-center justify-center py-8 space-y-6">
-                <div className="text-center space-y-2">
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Advertisement</p>
-                  <div className="glass-card p-4 bg-secondary/10 border border-dashed border-border/20 rounded-xl min-w-[300px] min-h-[250px] flex items-center justify-center">
-                    <div className="text-muted-foreground text-xs italic">Ad placeholder</div>
-                  </div>
-                </div>
-                
-                <button
-                  onClick={() => setShowAd(false)}
-                  className="group flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-heading font-bold text-primary-foreground hover:bg-primary/90 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-primary/20"
-                >
-                  Continue to Watch Live
-                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                </button>
-                
-                <p className="text-[9px] text-muted-foreground/60 max-w-[200px] text-center italic">
-                  Supporting our ads helps us keep this service free and updated.
-                </p>
-              </div>
-            ) : loading ? (
+            {loading ? (
               <p className="text-muted-foreground text-sm text-center py-8">
                 Loading streaming links...
               </p>
@@ -125,8 +102,8 @@ export function WatchLiveModal({ open, onClose }: Props) {
               <div className="space-y-5">
                 {groupedEntries.map(([matchId, links]) => (
                   <div key={matchId} className="space-y-3">
-                    <h3 className="text-sm font-heading font-bold text-primary">
-                      {matchId}
+                    <h3 className="text-sm font-heading font-bold text-primary text-center">
+                      Stream: {matchId}
                     </h3>
 
                     {links.map((link, index) => (
@@ -135,11 +112,11 @@ export function WatchLiveModal({ open, onClose }: Props) {
                         href={link}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors group"
+                        className="flex items-center gap-3 p-4 rounded-xl bg-secondary/30 hover:bg-secondary/50 border border-border/50 transition-all group hover:scale-[1.02] active:scale-[0.98]"
                       >
                         <ExternalLink className="h-4 w-4 text-primary group-hover:scale-110 transition-transform" />
-                        <span className="text-sm text-foreground truncate">
-                          {link}
+                        <span className="text-sm text-foreground font-medium truncate">
+                          Link {index + 1}: {link}
                         </span>
                       </a>
                     ))}
