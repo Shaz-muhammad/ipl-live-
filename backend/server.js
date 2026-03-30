@@ -60,10 +60,8 @@ function mergeScheduleWithLive(schedule, liveMatches) {
   const merged = schedule.map((fixture) => {
     const live = liveMatches.find((m) => teamsMatch(fixture, m));
 
-    if (live) {
-      // Basic normalization for live matches from CricAPI
-      const team1 = resolveTeam(fixture.homeTeam);
-      const team2 = resolveTeam(fixture.awayTeam);
+      const team1Data = resolveTeam(fixture.homeTeam);
+      const team2Data = resolveTeam(fixture.awayTeam);
       const team1ScoreObj = (live.score || []).find(s => s.inning.toLowerCase().includes(fixture.homeTeam.toLowerCase())) || {};
       const team2ScoreObj = (live.score || []).find(s => s.inning.toLowerCase().includes(fixture.awayTeam.toLowerCase())) || {};
       
@@ -93,10 +91,12 @@ function mergeScheduleWithLive(schedule, liveMatches) {
       return {
         ...fixture,
         apiId: live.id,
-        team1,
-        team2,
-        team1Logo: team1?.logo || "🏏",
-        team2Logo: team2?.logo || "🏏",
+        team1: fixture.homeTeam,
+        team2: fixture.awayTeam,
+        team1Short: team1Data?.shortName || fixture.homeTeam,
+        team2Short: team2Data?.shortName || fixture.awayTeam,
+        team1Logo: team1Data?.logo || "🏏",
+        team2Logo: team2Data?.logo || "🏏",
         team1Score,
         team2Score,
         team1Overs: team1ScoreObj.o || "",
@@ -125,14 +125,16 @@ function mergeScheduleWithLive(schedule, liveMatches) {
     const fixtureDateTime = new Date(`${fixture.dateRaw}T${fixture.timeRaw}:00+05:30`);
 
     if (fixtureDateTime > now) {
-      const team1 = resolveTeam(fixture.homeTeam);
-      const team2 = resolveTeam(fixture.awayTeam);
+      const team1Data = resolveTeam(fixture.homeTeam);
+      const team2Data = resolveTeam(fixture.awayTeam);
       return {
         ...fixture,
-        team1,
-        team2,
-        team1Logo: team1?.logo || "🏏",
-        team2Logo: team2?.logo || "🏏",
+        team1: fixture.homeTeam,
+        team2: fixture.awayTeam,
+        team1Short: team1Data?.shortName || fixture.homeTeam,
+        team2Short: team2Data?.shortName || fixture.awayTeam,
+        team1Logo: team1Data?.logo || "🏏",
+        team2Logo: team2Data?.logo || "🏏",
         status: "upcoming",
         statusText: "Match not started",
         score: "—",
@@ -151,14 +153,16 @@ function mergeScheduleWithLive(schedule, liveMatches) {
       };
     }
 
-    const team1 = resolveTeam(fixture.homeTeam);
-    const team2 = resolveTeam(fixture.awayTeam);
+    const team1Data = resolveTeam(fixture.homeTeam);
+    const team2Data = resolveTeam(fixture.awayTeam);
     return {
       ...fixture,
-      team1,
-      team2,
-      team1Logo: team1?.logo || "🏏",
-      team2Logo: team2?.logo || "🏏",
+      team1: fixture.homeTeam,
+      team2: fixture.awayTeam,
+      team1Short: team1Data?.shortName || fixture.homeTeam,
+      team2Short: team2Data?.shortName || fixture.awayTeam,
+      team1Logo: team1Data?.logo || "🏏",
+      team2Logo: team2Data?.logo || "🏏",
       status: "finished",
       statusText: fixture.statusText || "Match completed",
       score: "—",

@@ -10,10 +10,35 @@ import { Footer } from "@/components/Footer";
 import { WatchLiveModal } from "@/components/WatchLiveModal";
 import { AdminPanel } from "@/components/AdminPanel";
 import { useTeamTheme } from "@/hooks/useTeamTheme";
-import { AdSenseContainer } from "@/components/AdSenseContainer";
 import type { Match } from "@/types/match";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
+const extractMatches = (payload: unknown): Match[] => {
+  if (Array.isArray(payload)) {
+    return payload as Match[];
+  }
+
+  if (
+    payload &&
+    typeof payload === "object" &&
+    "matches" in payload &&
+    Array.isArray((payload as { matches?: unknown }).matches)
+  ) {
+    return (payload as { matches: Match[] }).matches;
+  }
+
+  if (
+    payload &&
+    typeof payload === "object" &&
+    "data" in payload &&
+    Array.isArray((payload as { data?: unknown }).data)
+  ) {
+    return (payload as { data: Match[] }).data;
+  }
+
+  return [];
+};
 
 const Index = () => {
   const [showWatchLive, setShowWatchLive] = useState(false);
@@ -25,13 +50,19 @@ const Index = () => {
   const { resetTheme } = useTeamTheme();
 
   const liveMatches = useMemo(() => {
-    return matches.filter(m => {
+    return matches.filter((m) => {
       const state = (m.matchState || "").toLowerCase();
       const status = (m.status || "").toLowerCase();
+
+      if (state === "complete" || status.includes("won by")) {
+        return false;
+      }
+
       return (
-        state === "in progress" ||
+        state.includes("progress") ||
+        state.includes("live") ||
         status.includes("need") ||
-        status.includes("opt to bat") ||
+        status.includes("opt") ||
         Boolean(m.team1Score) ||
         Boolean(m.team2Score)
       );
@@ -39,7 +70,7 @@ const Index = () => {
   }, [matches]);
 
   const selectedMatch = useMemo(() => {
-    return matches.find(m => m.id === selectedMatchId);
+    return matches.find((m) => m.id === selectedMatchId);
   }, [matches, selectedMatchId]);
 
   const heroMatch = useMemo(() => {
@@ -51,7 +82,7 @@ const Index = () => {
 
   const listMatches = useMemo(() => {
     if (!heroMatch) return matches;
-    return matches.filter(m => m.id !== heroMatch.id);
+    return matches.filter((m) => m.id !== heroMatch.id);
   }, [matches, heroMatch]);
 
   useEffect(() => {
@@ -68,7 +99,10 @@ const Index = () => {
     const fetchMatches = async () => {
       try {
         const response = await axios.get(`${API_BASE}/live-scores`);
-        setMatches(Array.isArray(response.data) ? response.data : []);
+        console.log("FETCH RESPONSE:", response.data);
+        const parsed = extractMatches(response.data);
+        console.log("PARSED FETCH MATCHES:", parsed);
+        setMatches(parsed);
       } catch (error) {
         console.error("Failed to fetch matches:", error);
       } finally {
@@ -84,9 +118,11 @@ const Index = () => {
       console.log("✅ Connected to socket");
     });
 
-    socket.on("liveScores", (data: Match[]) => {
+    socket.on("liveScores", (data: unknown) => {
       console.log("MATCHES UPDATE (Live):", data);
-      setMatches(Array.isArray(data) ? data : []);
+      const parsed = extractMatches(data);
+      console.log("PARSED SOCKET MATCHES:", parsed);
+      setMatches(parsed);
     });
 
     return () => {
@@ -114,19 +150,6 @@ const Index = () => {
         {heroMatch && (
           <section>
             <HeroMatchCard match={heroMatch} />
-
-            <div className="mt-6 flex justify-center">
-              <AdSenseContainer
-                slot="LIVE_SECTION_AD"
-                style={{
-                  display: "block",
-                  width: "100%",
-                  maxWidth: "728px",
-                  height: "90px",
-                }}
-                className="min-h-[90px]"
-              />
-            </div>
           </section>
         )}
 

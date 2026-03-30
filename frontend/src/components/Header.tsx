@@ -1,6 +1,5 @@
 import { motion } from "framer-motion";
 import { Shield, Tv, RotateCcw } from "lucide-react";
-import { AdSenseContainer } from "./AdSenseContainer";
 
 interface Props {
   onAdminClick?: () => void;
@@ -58,15 +57,6 @@ export function Header({
             </button>
           </motion.div>
         </div>
-      </div>
-
-      {/* Top Banner Ad */}
-      <div className="w-full flex justify-center py-2 bg-black/40 backdrop-blur-sm border-b border-border/20">
-        <AdSenseContainer 
-          slot="TOP_BANNER_SLOT" 
-          style={{ display: "block", width: "100%", maxWidth: "728px", height: "90px" }}
-          className="min-h-[90px]"
-        />
       </div>
     </header>
   );

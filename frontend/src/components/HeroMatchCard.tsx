@@ -67,8 +67,8 @@ const HeroMatchCard = ({ match }: HeroMatchCardProps) => {
     );
   }
 
-  const team1Name = getTeamLabel(match.team1Short, match.team1);
-  const team2Name = getTeamLabel(match.team2Short, match.team2);
+  const team1Name = match.team1Short || match.team1 || "Team 1";
+  const team2Name = match.team2Short || match.team2 || "Team 2";
 
   const team1Score = safeText(match.team1Score, "—");
   const team2Score = safeText(match.team2Score, "—");
@@ -100,7 +100,7 @@ const HeroMatchCard = ({ match }: HeroMatchCardProps) => {
         </div>
       </div>
 
-      <div className="grid gap-5 md:grid-cols-2">
+      <div className="grid grid-cols-1 items-center gap-8 md:grid-cols-2">
         <div className="rounded-2xl bg-white/5 p-5">
           <div className="flex items-center gap-4">
             {isValidImageUrl(match.team1Logo) ? (
@@ -111,7 +111,7 @@ const HeroMatchCard = ({ match }: HeroMatchCardProps) => {
               />
             ) : (
               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-cyan-500/20 text-xl font-bold text-cyan-200">
-                {getInitials(team1Name)}
+                {match.team1Logo && match.team1Logo.length <= 4 ? match.team1Logo : getInitials(team1Name)}
               </div>
             )}
 
@@ -141,7 +141,7 @@ const HeroMatchCard = ({ match }: HeroMatchCardProps) => {
               />
             ) : (
               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-fuchsia-500/20 text-xl font-bold text-fuchsia-200">
-                {getInitials(team2Name)}
+                {match.team2Logo && match.team2Logo.length <= 4 ? match.team2Logo : getInitials(team2Name)}
               </div>
             )}
 

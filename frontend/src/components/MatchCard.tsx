@@ -6,6 +6,25 @@ type MatchCardProps = {
   onClick?: () => void;
 };
 
+const isValidImageUrl = (value?: string): boolean => {
+  if (!value || typeof value !== "string") return false;
+  const trimmed = value.trim();
+  return (
+    trimmed.startsWith("http://") ||
+    trimmed.startsWith("https://") ||
+    trimmed.startsWith("/") ||
+    trimmed.startsWith("data:image/")
+  );
+};
+
+const getInitials = (name?: string): string => {
+  if (!name || typeof name !== "string") return "T";
+  const parts = name.trim().split(" ").filter(Boolean);
+  if (parts.length === 0) return "T";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0] || ""}${parts[1][0] || ""}`.toUpperCase();
+};
+
 export default function MatchCard({ match, onClick }: MatchCardProps) {
   const team1Name = match.team1Short || match.team1 || "Team 1";
   const team2Name = match.team2Short || match.team2 || "Team 2";
@@ -27,9 +46,17 @@ export default function MatchCard({ match, onClick }: MatchCardProps) {
       <div className="space-y-3">
         <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-cyan-500/20 text-sm font-bold text-cyan-200">
-              {match.team1Logo || team1Name.substring(0, 1)}
-            </div>
+            {isValidImageUrl(match.team1Logo) ? (
+              <img
+                src={match.team1Logo}
+                alt={team1Name}
+                className="h-10 w-10 rounded-full object-cover"
+              />
+            ) : (
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-cyan-500/20 text-xs font-bold text-cyan-200">
+                {match.team1Logo && match.team1Logo.length <= 4 ? match.team1Logo : getInitials(team1Name)}
+              </div>
+            )}
 
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold text-white">
@@ -50,9 +77,17 @@ export default function MatchCard({ match, onClick }: MatchCardProps) {
 
         <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-fuchsia-500/20 text-sm font-bold text-fuchsia-200">
-              {match.team2Logo || team2Name.substring(0, 1)}
-            </div>
+            {isValidImageUrl(match.team2Logo) ? (
+              <img
+                src={match.team2Logo}
+                alt={team2Name}
+                className="h-10 w-10 rounded-full object-cover"
+              />
+            ) : (
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-fuchsia-500/20 text-xs font-bold text-fuchsia-200">
+                {match.team2Logo && match.team2Logo.length <= 4 ? match.team2Logo : getInitials(team2Name)}
+              </div>
+            )}
 
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold text-white">
