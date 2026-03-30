@@ -1,7 +1,8 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ExternalLink, Tv } from "lucide-react";
+import { X, ExternalLink, Tv, ArrowRight } from "lucide-react";
 import { api } from "@/services/api";
 import { useEffect, useMemo, useState } from "react";
+import { AdSenseContainer } from "./AdSenseContainer";
 
 interface Props {
   open: boolean;
@@ -14,10 +15,12 @@ export function WatchLiveModal({ open, onClose }: Props) {
     Record<string, string[]>
   >({});
   const [loading, setLoading] = useState(false);
+  const [showAd, setShowAd] = useState(true);
 
   useEffect(() => {
     if (!open) {
       setLinksByMatchId({});
+      setShowAd(true); // Reset ad state when modal closes
       return;
     }
 
@@ -32,7 +35,7 @@ export function WatchLiveModal({ open, onClose }: Props) {
         const docs = Array.isArray(res.data) ? res.data : [];
         const grouped: Record<string, string[]> = {};
         
-        docs.forEach((doc: any) => {
+        docs.forEach((doc: { matchId?: string; links?: string[] }) => {
           if (doc.matchId && Array.isArray(doc.links) && doc.links.length > 0) {
             grouped[doc.matchId] = doc.links;
           }
@@ -90,7 +93,32 @@ export function WatchLiveModal({ open, onClose }: Props) {
               </button>
             </div>
 
-            {loading ? (
+            {showAd ? (
+              <div className="flex flex-col items-center justify-center py-8 space-y-6">
+                <div className="text-center space-y-2">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Advertisement</p>
+                  <div className="glass-card p-4 bg-secondary/10 border border-dashed border-border/20 rounded-xl min-w-[300px] min-h-[250px] flex items-center justify-center">
+                    <AdSenseContainer 
+                      slot="INTERSTITIAL_AD" 
+                      style={{ display: "block", width: "300px", height: "250px" }}
+                      className="mx-auto"
+                    />
+                  </div>
+                </div>
+                
+                <button
+                  onClick={() => setShowAd(false)}
+                  className="group flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-heading font-bold text-primary-foreground hover:bg-primary/90 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-primary/20"
+                >
+                  Continue to Watch Live
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                </button>
+                
+                <p className="text-[9px] text-muted-foreground/60 max-w-[200px] text-center italic">
+                  Supporting our ads helps us keep this service free and updated.
+                </p>
+              </div>
+            ) : loading ? (
               <p className="text-muted-foreground text-sm text-center py-8">
                 Loading streaming links...
               </p>

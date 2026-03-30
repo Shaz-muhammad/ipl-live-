@@ -1,24 +1,5 @@
 import { motion } from "framer-motion";
-
-// ✅ Define types locally (safe for now)
-export interface BattingEntry {
-  name: string;
-  runs: number;
-  balls: number;
-  fours: number;
-  sixes: number;
-  sr: number;
-  dismissal: string;
-}
-
-export interface BowlingEntry {
-  name: string;
-  overs: number;
-  maidens: number;
-  runs: number;
-  wickets: number;
-  economy: number;
-}
+import type { BattingEntry, BowlingEntry } from "@/types/match";
 
 interface Props {
   batting?: BattingEntry[];
@@ -109,7 +90,7 @@ export function Scorecard({ batting = [], bowling = [] }: Props) {
                     </td>
 
                     <td className="text-right py-2 px-2 text-muted-foreground">
-                      {b.sr ? b.sr.toFixed(1) : "0.0"}
+                      {typeof b.sr === 'number' ? b.sr.toFixed(1) : (b.sr || "0.0")}
                     </td>
                   </motion.tr>
                 );
@@ -177,7 +158,7 @@ export function Scorecard({ batting = [], bowling = [] }: Props) {
                   </td>
 
                   <td className="text-right py-2 px-2 text-muted-foreground">
-                    {b.economy ? b.economy.toFixed(1) : "0.0"}
+                    {typeof b.economy === 'number' ? b.economy.toFixed(1) : (b.economy || b.eco || "0.0")}
                   </td>
                 </motion.tr>
               ))}

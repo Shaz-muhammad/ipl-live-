@@ -1,16 +1,6 @@
 import { motion } from "framer-motion";
 import type { TargetAndTransition } from "framer-motion";
-
-// ✅ Define type locally
-export interface CommentaryEntry {
-  id: string;
-  over: string;
-  ball: string;
-  text: string;
-  runs: number;
-  event: "normal" | "four" | "six" | "wicket" | "dot" | "wide" | "no-ball";
-  timestamp: number;
-}
+import type { CommentaryEntry } from "@/types/match";
 
 interface Props {
   entries: CommentaryEntry[];
@@ -67,23 +57,25 @@ export function Commentary({ entries }: Props) {
   return (
     <div className="space-y-2">
       {entries.map((entry, i) => {
-        const badge = eventBadge[entry.event];
-        const animation = eventAnimations[entry.event] || { opacity: 1, x: 0 };
+        const eventType = (entry.event || "normal") as EventType;
+        const style = eventStyles[eventType] || eventStyles.normal;
+        const badge = eventBadge[eventType];
+        const animation = eventAnimations[eventType] || { opacity: 1, x: 0 };
 
         return (
           <motion.div
-            key={entry.id}
+            key={entry.id || i}
             initial={{ opacity: 0, x: -20 }}
             animate={animation}
             transition={{ delay: i * 0.05 }}
-            className={`glass-card p-3 rounded-lg ${eventStyles[entry.event]}`}
+            className={`glass-card p-3 rounded-lg ${style}`}
           >
             <div className="flex items-start gap-3">
               <span className="font-display text-[10px] text-muted-foreground whitespace-nowrap mt-0.5">
-                {entry.over}.{entry.ball}
+                {entry.over || "0"}.{entry.ball || "0"}
               </span>
 
-              <p className="text-sm text-foreground flex-1">{entry.text}</p>
+              <p className="text-sm text-foreground flex-1">{entry.text || entry.commentary || ""}</p>
 
               {badge && (
                 <span

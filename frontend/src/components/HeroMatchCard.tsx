@@ -1,151 +1,120 @@
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
-import { LiveBadge } from "./LiveBadge";
+import type { Match } from "../types/match";
+import {
+  formatOvers,
+  formatStatus,
+  getInitials,
+  getTeamLabel,
+  safeText,
+} from "../utils/matchHelpers";
 
-export type Match = { 
-  id: string; 
-  apiId?: string; 
-  team1: string; 
-  team2: string; 
-  team1Short?: string; 
-  team2Short?: string; 
-  team1Logo?: string; 
-  team2Logo?: string; 
-  team1Score?: string; 
-  team2Score?: string; 
-  team1Overs?: string; 
-  team2Overs?: string; 
-  status?: string; 
-  matchState?: string; 
-  tossWinner?: string; 
-  tossChoice?: string; 
-  result?: string; 
-  target?: number; 
-  rrr?: string; 
-  currentInnings?: string; 
-  venue?: string; 
-  date?: string; 
-  time?: string; 
-  commentary?: any[];
-  batting?: any[];
-  bowling?: any[];
-}; 
+type HeroMatchCardProps = {
+  match?: Match;
+};
 
-interface Props {
-  match: Match;
-  onTeamClick: (teamId: string, primary: string, secondary: string) => void;
-}
+export default function HeroMatchCard({ match }: HeroMatchCardProps) {
+  if (!match) {
+    return (
+      <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-xl backdrop-blur-md">
+        <p className="text-lg font-semibold text-white">No matches available</p>
+        <p className="mt-2 text-sm text-gray-400">
+          Check back later for live updates.
+        </p>
+      </div>
+    );
+  }
 
-export function HeroMatchCard({ match, onTeamClick }: Props) {
-  const navigate = useNavigate();
+  const team1Name = getTeamLabel(match.team1Short, match.team1);
+  const team2Name = getTeamLabel(match.team2Short, match.team2);
 
-  if (!match) return null;
-
-  const isLive = (match.matchState || "").toLowerCase() === "in progress" || (match.status || "").toLowerCase().includes("need");
-  const isFinished = (match.matchState || "").toLowerCase() === "complete" || (match.status || "").toLowerCase().includes("won by");
-
-  const displayStatus = isLive ? "live" : isFinished ? "finished" : "upcoming";
-
-  const team1DisplayName = match.team1Short || match.team1 || "Team 1";
-  const team2DisplayName = match.team2Short || match.team2 || "Team 2";
+  const status = formatStatus(match);
+  const venue = safeText(match.venue, "Venue not available");
+  const matchState = safeText(match.matchState, "Match");
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      onClick={() => navigate(`/match/${match.id}`)}
-      className="glass-card neon-border cursor-pointer p-5 md:p-6 max-w-2xl mx-auto overflow-hidden relative"
+      transition={{ duration: 0.35 }}
+      className="overflow-hidden rounded-3xl border border-cyan-400/20 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-6 shadow-2xl"
     >
-      <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl rounded-full -mr-16 -mt-16 pointer-events-none" />
-      
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2">
-          {displayStatus === "live" ? (
-            <LiveBadge />
-          ) : (
-            <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${
-              isFinished ? "bg-muted text-muted-foreground" : "bg-neon-blue/10 text-neon-blue"
-            }`}>
-              {isFinished ? "Match Finished" : "Upcoming"}
-            </span>
-          )}
+      <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div>
+          <p className="text-xs uppercase tracking-[0.2em] text-cyan-300">
+            Featured Match
+          </p>
+          <h2 className="mt-1 text-2xl font-bold text-white">{matchState}</h2>
         </div>
-        <div className="text-[10px] md:text-xs text-muted-foreground font-medium truncate ml-4">
-          {match.venue || "Unknown venue"}
+
+        <div className="rounded-full bg-cyan-500/10 px-4 py-2 text-sm font-medium text-cyan-200">
+          {venue}
         </div>
       </div>
 
-      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4 md:gap-8 mb-6">
-        <div 
-          className="flex items-center gap-3 cursor-pointer group"
-          onClick={(e) => {
-            e.stopPropagation();
-            onTeamClick(team1DisplayName, "#00ffff", "#0ea5e9");
-          }}
-        >
-          <div className="flex flex-col items-center gap-1">
-             <span className="text-3xl md:text-4xl filter drop-shadow-neon-sm group-hover:scale-110 transition-transform">
-              {match.team1Logo || "🏏"}
-            </span>
-            <span className="font-heading text-xs font-bold text-muted-foreground uppercase tracking-tighter">
-              {team1DisplayName.substring(0, 3)}
-            </span>
-          </div>
-          <div className="flex flex-col">
-            <span className="font-display text-xl md:text-3xl font-bold text-foreground leading-none">
-              {match.team1Score || "—"}
-            </span>
-            {match.team1Overs && (
-              <span className="text-[10px] md:text-xs text-muted-foreground font-medium mt-1">
-                ({match.team1Overs} ov)
-              </span>
+      <div className="grid gap-5 md:grid-cols-2">
+        <div className="rounded-2xl bg-white/5 p-5">
+          <div className="flex items-center gap-4">
+            {match.team1Logo ? (
+              <img
+                src={match.team1Logo}
+                alt={team1Name}
+                className="h-16 w-16 rounded-full object-cover"
+              />
+            ) : (
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-cyan-500/20 text-xl font-bold text-cyan-200">
+                {getInitials(team1Name)}
+              </div>
             )}
+
+            <div className="min-w-0">
+              <p className="truncate text-lg font-semibold text-white">
+                {team1Name}
+              </p>
+              <p className="mt-1 text-2xl font-bold text-cyan-300">
+                {safeText(match.team1Score, "—")}
+              </p>
+              {match.team1Overs ? (
+                <p className="text-sm text-gray-400">
+                  {formatOvers(match.team1Overs)}
+                </p>
+              ) : null}
+            </div>
           </div>
         </div>
 
-        <div className="flex flex-col items-center">
-          <div className="h-8 w-[1px] bg-border/50" />
-          <span className="font-display text-[10px] text-muted-foreground/50 my-1 font-bold">
-            VS
-          </span>
-          <div className="h-8 w-[1px] bg-border/50" />
-        </div>
-
-        <div 
-          className="flex items-center gap-3 justify-end text-right cursor-pointer group"
-          onClick={(e) => {
-            e.stopPropagation();
-            onTeamClick(team2DisplayName, "#a855f7", "#ec4899");
-          }}
-        >
-          <div className="flex flex-col items-end">
-            <span className="font-display text-xl md:text-3xl font-bold text-foreground leading-none">
-              {match.team2Score || "—"}
-            </span>
-            {match.team2Overs && (
-              <span className="text-[10px] md:text-xs text-muted-foreground font-medium mt-1">
-                ({match.team2Overs} ov)
-              </span>
+        <div className="rounded-2xl bg-white/5 p-5">
+          <div className="flex items-center gap-4">
+            {match.team2Logo ? (
+              <img
+                src={match.team2Logo}
+                alt={team2Name}
+                className="h-16 w-16 rounded-full object-cover"
+              />
+            ) : (
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-fuchsia-500/20 text-xl font-bold text-fuchsia-200">
+                {getInitials(team2Name)}
+              </div>
             )}
-          </div>
-          <div className="flex flex-col items-center gap-1">
-            <span className="text-3xl md:text-4xl filter drop-shadow-neon-sm group-hover:scale-110 transition-transform">
-              {match.team2Logo || "🏏"}
-            </span>
-            <span className="font-heading text-xs font-bold text-muted-foreground uppercase tracking-tighter">
-              {team2DisplayName.substring(0, 3)}
-            </span>
+
+            <div className="min-w-0">
+              <p className="truncate text-lg font-semibold text-white">
+                {team2Name}
+              </p>
+              <p className="mt-1 text-2xl font-bold text-fuchsia-300">
+                {safeText(match.team2Score, "—")}
+              </p>
+              {match.team2Overs ? (
+                <p className="text-sm text-gray-400">
+                  {formatOvers(match.team2Overs)}
+                </p>
+              ) : null}
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="pt-4 border-t border-border/30 space-y-3">
-        <p className={`text-sm md:text-base font-heading font-bold text-center ${
-          displayStatus === "live" ? "neon-text-accent animate-pulse" : "text-foreground"
-        }`}>
-          {match.status || "Match info unavailable"}
-        </p>
+      <div className="mt-6 rounded-2xl border border-emerald-400/10 bg-emerald-500/5 p-4">
+        <p className="text-base font-medium text-emerald-300">{status}</p>
       </div>
     </motion.div>
   );

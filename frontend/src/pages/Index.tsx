@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { io } from "socket.io-client";
 import { Header } from "@/components/Header";
-import { HeroMatchCard } from "@/components/HeroMatchCard";
+import HeroMatchCard from "@/components/HeroMatchCard";
 import MatchCard from "@/components/MatchCard";
 import { SectionHeader } from "@/components/SectionHeader";
 import { BlogSection } from "@/components/BlogSection";
@@ -10,35 +10,8 @@ import { Footer } from "@/components/Footer";
 import { WatchLiveModal } from "@/components/WatchLiveModal";
 import { AdminPanel } from "@/components/AdminPanel";
 import { useTeamTheme } from "@/hooks/useTeamTheme";
-
-export type Match = { 
-  id: string; 
-  apiId?: string; 
-  team1: string; 
-  team2: string; 
-  team1Short?: string; 
-  team2Short?: string; 
-  team1Logo?: string; 
-  team2Logo?: string; 
-  team1Score?: string; 
-  team2Score?: string; 
-  team1Overs?: string; 
-  team2Overs?: string; 
-  status?: string; 
-  matchState?: string; 
-  tossWinner?: string; 
-  tossChoice?: string; 
-  result?: string; 
-  target?: number; 
-  rrr?: string; 
-  currentInnings?: string; 
-  venue?: string; 
-  date?: string; 
-  time?: string; 
-  commentary?: any[];
-  batting?: any[];
-  bowling?: any[];
-}; 
+import { AdSenseContainer } from "@/components/AdSenseContainer";
+import type { Match } from "@/types/match";
 
 type ApiStatus = "live" | "no-match" | "paused" | "unavailable"; 
 
@@ -52,38 +25,6 @@ const Index = () => {
   const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
 
   const { setTeamTheme, resetTheme } = useTeamTheme();
-
-  useEffect(() => {
-    // Initial fetch
-    const fetchMatches = async () => {
-      try {
-        const response = await axios.get(`${API_BASE}/live-scores`);
-        setMatches(Array.isArray(response.data) ? response.data : []);
-      } catch (error) {
-        console.error("Failed to fetch matches:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchMatches();
-
-    // Socket connection
-    const socket = io(API_BASE);
-    
-    socket.on("connect", () => {
-      console.log("✅ Connected to socket");
-    });
-
-    socket.on("liveScores", (data: any) => {
-      console.log("MATCHES UPDATE:", data);
-      setMatches(Array.isArray(data) ? data : []);
-    });
-
-    return () => {
-      socket.disconnect();
-    };
-  }, []);
 
   const liveMatches = useMemo(() => {
     return matches.filter(m => {
@@ -115,6 +56,49 @@ const Index = () => {
     return matches.filter(m => m.id !== heroMatch.id);
   }, [matches, heroMatch]);
 
+  // 🧠 SEO Optimization
+  useEffect(() => {
+    if (heroMatch) {
+      const t1 = heroMatch.team1Short || heroMatch.team1;
+      const t2 = heroMatch.team2Short || heroMatch.team2;
+      document.title = `IPL 2026 Live Score | ${t1} vs ${t2} Live Updates`;
+    } else {
+      document.title = "IPL 2026 Live Score | Real-time Match Updates";
+    }
+  }, [heroMatch]);
+
+  useEffect(() => {
+    // Initial fetch
+    const fetchMatches = async () => {
+      try {
+        const response = await axios.get(`${API_BASE}/live-scores`);
+        setMatches(Array.isArray(response.data) ? response.data : []);
+      } catch (error) {
+        console.error("Failed to fetch matches:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMatches();
+
+    // Socket connection
+    const socket = io(API_BASE);
+    
+    socket.on("connect", () => {
+      console.log("✅ Connected to socket");
+    });
+
+    socket.on("liveScores", (data: Match[]) => {
+      console.log("MATCHES UPDATE (Live):", data);
+      setMatches(Array.isArray(data) ? data : []);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
+
   const handleTeamClick = (
     teamId: string,
     primary: string,
@@ -144,6 +128,15 @@ const Index = () => {
               match={heroMatch} 
               onTeamClick={handleTeamClick} 
             />
+
+            {/* Ad below Hero Section */}
+            <div className="flex justify-center mt-6">
+              <AdSenseContainer 
+                slot="LIVE_SECTION_AD" 
+                style={{ display: "block", width: "100%", maxWidth: "728px", height: "90px" }}
+                className="min-h-[90px]"
+              />
+            </div>
           </section>
         )}
 

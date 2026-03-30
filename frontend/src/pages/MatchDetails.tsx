@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -9,34 +9,34 @@ import { Commentary } from "@/components/Commentary";
 import { Footer } from "@/components/Footer";
 import { api } from "@/services/api";
 
-export type Match = { 
-  id: string; 
-  apiId?: string; 
-  team1: string; 
-  team2: string; 
-  team1Short?: string; 
-  team2Short?: string; 
-  team1Logo?: string; 
-  team2Logo?: string; 
-  team1Score?: string; 
-  team2Score?: string; 
-  team1Overs?: string; 
-  team2Overs?: string; 
-  status?: string; 
-  matchState?: string; 
-  tossWinner?: string; 
-  tossChoice?: string; 
-  result?: string; 
-  target?: number; 
-  rrr?: string; 
-  currentInnings?: string; 
-  venue?: string; 
-  date?: string; 
-  time?: string; 
+export type Match = {
+  id: string;
+  apiId?: string;
+  team1: string;
+  team2: string;
+  team1Short?: string;
+  team2Short?: string;
+  team1Logo?: string;
+  team2Logo?: string;
+  team1Score?: string;
+  team2Score?: string;
+  team1Overs?: string;
+  team2Overs?: string;
+  status?: string;
+  matchState?: string;
+  tossWinner?: string;
+  tossChoice?: string;
+  result?: string;
+  target?: number;
+  rrr?: string;
+  currentInnings?: string;
+  venue?: string;
+  date?: string;
+  time?: string;
   commentary?: any[];
   batting?: any[];
   bowling?: any[];
-}; 
+};
 
 type Tab = "summary" | "scorecard" | "commentary" | "info";
 
@@ -44,6 +44,26 @@ const MatchDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<Tab>("summary");
+
+  // 🧠 SEO Optimization
+  useEffect(() => {
+    if (match) {
+      const t1 = match.team1Short || match.team1;
+      const t2 = match.team2Short || match.team2;
+      document.title = `${t1} vs ${t2} Live Score | IPL 2026 Updates`;
+
+      // Update meta description dynamically
+      const metaDescription = document.querySelector(
+        'meta[name="description"]',
+      );
+      if (metaDescription) {
+        metaDescription.setAttribute(
+          "content",
+          `Live score and updates for ${t1} vs ${t2}. ${match.status || ""}. Follow IPL 2026 real-time updates on IPL LIVE.`,
+        );
+      }
+    }
+  }, [match]);
 
   const {
     data: match,
@@ -101,11 +121,14 @@ const MatchDetails = () => {
           </button>
 
           <h1 className="font-heading text-sm font-bold text-foreground truncate">
-            {match.team1Short || match.team1} vs {match.team2Short || match.team2}
+            {match.team1Short || match.team1} vs{" "}
+            {match.team2Short || match.team2}
           </h1>
 
           <div className="ml-auto flex items-center gap-2">
-            {(match.matchState || "").toLowerCase() === "in progress" && <LiveBadge />}
+            {(match.matchState || "").toLowerCase() === "in progress" && (
+              <LiveBadge />
+            )}
           </div>
         </div>
       </div>
@@ -119,7 +142,9 @@ const MatchDetails = () => {
         >
           <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4 md:gap-8 mb-6">
             <div className="flex flex-col items-center gap-2">
-              <span className="text-4xl filter drop-shadow-neon-sm">{match.team1Logo || "🏏"}</span>
+              <span className="text-4xl filter drop-shadow-neon-sm">
+                {match.team1Logo || "🏏"}
+              </span>
               <p className="font-heading font-bold text-foreground text-sm uppercase">
                 {match.team1Short || match.team1}
               </p>
@@ -127,14 +152,20 @@ const MatchDetails = () => {
                 {match.team1Score || "—"}
               </p>
               {match.team1Overs && (
-                <p className="text-[10px] text-muted-foreground">({match.team1Overs} ov)</p>
+                <p className="text-[10px] text-muted-foreground">
+                  ({match.team1Overs} ov)
+                </p>
               )}
             </div>
 
-            <div className="font-display text-[10px] text-muted-foreground/50 font-bold">VS</div>
+            <div className="font-display text-[10px] text-muted-foreground/50 font-bold">
+              VS
+            </div>
 
             <div className="flex flex-col items-center gap-2">
-              <span className="text-4xl filter drop-shadow-neon-sm">{match.team2Logo || "🏏"}</span>
+              <span className="text-4xl filter drop-shadow-neon-sm">
+                {match.team2Logo || "🏏"}
+              </span>
               <p className="font-heading font-bold text-foreground text-sm uppercase">
                 {match.team2Short || match.team2}
               </p>
@@ -142,7 +173,9 @@ const MatchDetails = () => {
                 {match.team2Score || "—"}
               </p>
               {match.team2Overs && (
-                <p className="text-[10px] text-muted-foreground">({match.team2Overs} ov)</p>
+                <p className="text-[10px] text-muted-foreground">
+                  ({match.team2Overs} ov)
+                </p>
               )}
             </div>
           </div>
@@ -161,19 +194,21 @@ const MatchDetails = () => {
 
         {/* Tabs */}
         <div className="flex gap-1 border-b border-border/30 overflow-x-auto no-scrollbar">
-          {(["summary", "scorecard", "commentary", "info"] as Tab[]).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`px-4 py-3 text-xs font-heading font-bold uppercase tracking-widest whitespace-nowrap transition-all border-b-2 ${
-                activeTab === tab
-                  ? "border-primary text-primary"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
+          {(["summary", "scorecard", "commentary", "info"] as Tab[]).map(
+            (tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`px-4 py-3 text-xs font-heading font-bold uppercase tracking-widest whitespace-nowrap transition-all border-b-2 ${
+                  activeTab === tab
+                    ? "border-primary text-primary"
+                    : "border-transparent text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {tab}
+              </button>
+            ),
+          )}
         </div>
 
         {/* Tab Content */}
@@ -181,23 +216,42 @@ const MatchDetails = () => {
           {activeTab === "summary" && (
             <div className="space-y-4">
               <section className="glass-card p-4 space-y-3">
-                <h3 className="text-xs font-bold uppercase text-muted-foreground border-b border-border/10 pb-2">Match Highlights</h3>
+                <h3 className="text-xs font-bold uppercase text-muted-foreground border-b border-border/10 pb-2">
+                  Match Highlights
+                </h3>
                 <div className="space-y-2 text-xs">
                   {match.tossWinner && (
-                    <p className="text-foreground"><span className="text-muted-foreground">Toss:</span> {match.tossWinner} elected to {match.tossChoice}</p>
+                    <p className="text-foreground">
+                      <span className="text-muted-foreground">Toss:</span>{" "}
+                      {match.tossWinner} elected to {match.tossChoice}
+                    </p>
                   )}
                   {match.target && (
-                    <p className="text-neon-blue font-bold"><span className="text-muted-foreground">Target:</span> {match.target} runs</p>
+                    <p className="text-neon-blue font-bold">
+                      <span className="text-muted-foreground">Target:</span>{" "}
+                      {match.target} runs
+                    </p>
                   )}
                   {match.rrr && (
-                    <p className="text-neon-red font-bold"><span className="text-muted-foreground">Req. Run Rate:</span> {match.rrr}</p>
+                    <p className="text-neon-red font-bold">
+                      <span className="text-muted-foreground">
+                        Req. Run Rate:
+                      </span>{" "}
+                      {match.rrr}
+                    </p>
                   )}
                   {match.currentInnings && (
-                    <p className="text-foreground"><span className="text-muted-foreground">Innings:</span> {match.currentInnings}</p>
+                    <p className="text-foreground">
+                      <span className="text-muted-foreground">Innings:</span>{" "}
+                      {match.currentInnings}
+                    </p>
                   )}
                 </div>
               </section>
-              <Scorecard batting={match.batting?.slice(0, 3)} bowling={match.bowling?.slice(0, 3)} />
+              <Scorecard
+                batting={match.batting?.slice(0, 3)}
+                bowling={match.bowling?.slice(0, 3)}
+              />
             </div>
           )}
 
@@ -213,20 +267,32 @@ const MatchDetails = () => {
             <section className="glass-card p-5 space-y-4">
               <div className="grid grid-cols-2 gap-4 text-xs">
                 <div>
-                  <p className="text-muted-foreground mb-1 uppercase tracking-tighter">Venue</p>
+                  <p className="text-muted-foreground mb-1 uppercase tracking-tighter">
+                    Venue
+                  </p>
                   <p className="font-bold">{match.venue}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground mb-1 uppercase tracking-tighter">Date & Time</p>
-                  <p className="font-bold">{match.date} • {match.time}</p>
+                  <p className="text-muted-foreground mb-1 uppercase tracking-tighter">
+                    Date & Time
+                  </p>
+                  <p className="font-bold">
+                    {match.date} • {match.time}
+                  </p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground mb-1 uppercase tracking-tighter">Series</p>
+                  <p className="text-muted-foreground mb-1 uppercase tracking-tighter">
+                    Series
+                  </p>
                   <p className="font-bold">Indian Premier League 2026</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground mb-1 uppercase tracking-tighter">Match State</p>
-                  <p className="font-bold uppercase text-primary">{match.matchState || match.status}</p>
+                  <p className="text-muted-foreground mb-1 uppercase tracking-tighter">
+                    Match State
+                  </p>
+                  <p className="font-bold uppercase text-primary">
+                    {match.matchState || match.status}
+                  </p>
                 </div>
               </div>
             </section>
