@@ -15,38 +15,41 @@ import type { Match } from "@/types/match";
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 const extractMatches = (payload: unknown): Match[] => {
+  console.log("EXTRACTING MATCHES FROM PAYLOAD:", payload);
+  if (!payload) return [];
+  
   if (Array.isArray(payload)) {
     return payload as Match[];
   }
 
-  if (
-    payload &&
-    typeof payload === "object" &&
-    "matches" in payload &&
-    Array.isArray((payload as { matches?: unknown }).matches)
-  ) {
-    return (payload as { matches: Match[] }).matches;
-  }
-
-  if (
-    payload &&
-    typeof payload === "object" &&
-    "data" in payload &&
-    Array.isArray((payload as { data?: unknown }).data)
-  ) {
-    return (payload as { data: Match[] }).data;
+  if (typeof payload === "object") {
+    const p = payload as any;
+    // Check common payload wrappers
+    if (Array.isArray(p.data)) return p.data;
+    if (Array.isArray(p.matches)) return p.matches;
+    if (Array.isArray(p.latestMatches)) return p.latestMatches;
+    
+    // Check if it's a single match object instead of an array
+    if (p.id && (p.team1 || p.team2)) {
+      return [p as Match];
+    }
   }
 
   return [];
 };
 
 const Index = () => {
+  const [hasMounted, setHasMounted] = useState(false);
   const [showWatchLive, setShowWatchLive] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
   const [matches, setMatches] = useState<Match[]>([]);
   const [apiStatus, setApiStatus] = useState<string>("no-match");
   const [loading, setLoading] = useState(true);
   const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
 
   const { resetTheme } = useTeamTheme();
 
@@ -75,10 +78,16 @@ const Index = () => {
   }, [matches, selectedMatchId]);
 
   const heroMatch = useMemo(() => {
-    if (selectedMatch) return selectedMatch;
-    if (liveMatches.length > 0) return liveMatches[0];
-    if (matches.length > 0) return matches[0];
-    return undefined;
+    let result: Match | undefined = undefined;
+    if (selectedMatch) {
+      result = selectedMatch;
+    } else if (liveMatches.length > 0) {
+      result = liveMatches[0];
+    } else if (matches.length > 0) {
+      result = matches[0];
+    }
+    console.log("CALCULATED HERO MATCH:", result);
+    return result;
   }, [selectedMatch, liveMatches, matches]);
 
   const listMatches = useMemo(() => {
@@ -127,8 +136,11 @@ const Index = () => {
       const parsed = extractMatches(data);
       console.log("PARSED SOCKET MATCHES:", parsed);
       setMatches(parsed);
-      if (data && typeof data === "object" && "apiStatus" in data) {
-        setApiStatus(String((data as any).apiStatus));
+      if (data && typeof data === "object") {
+        const payload = data as { apiStatus?: string };
+        if (payload.apiStatus) {
+          setApiStatus(payload.apiStatus);
+        }
       }
     });
 
@@ -136,6 +148,12 @@ const Index = () => {
       socket.disconnect();
     };
   }, []);
+
+  useEffect(() => {
+    console.log("MATCHES STATE CHANGED:", matches);
+  }, [matches]);
+
+  if (!hasMounted) return null;
 
   return (
     <div className="min-h-screen bg-background">

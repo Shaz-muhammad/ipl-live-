@@ -26,8 +26,15 @@ const getInitials = (name?: string): string => {
 };
 
 export default function MatchCard({ match, onClick }: MatchCardProps) {
-  const team1Name = match.team1Short || match.team1 || "Team 1";
-  const team2Name = match.team2Short || match.team2 || "Team 2";
+  const team1Name = match.team1Short || match.team1 || "Unknown Team 1";
+  const team2Name = match.team2Short || match.team2 || "Unknown Team 2";
+
+  const team1Score = match.team1Score || "—";
+  const team2Score = match.team2Score || "—";
+
+  const status = match.status || match.result || "Live";
+  const venue = match.venue || "TBA";
+  const matchState = match.matchState || "Live";
 
   return (
     <motion.div
@@ -38,9 +45,9 @@ export default function MatchCard({ match, onClick }: MatchCardProps) {
     >
       <div className="mb-3 flex items-center justify-between gap-3">
         <span className="rounded-full bg-cyan-500/10 px-3 py-1 text-xs font-semibold text-cyan-300">
-          {match.matchState || "Match"}
+          {matchState}
         </span>
-        <span className="truncate text-xs text-gray-400">{match.venue || "Venue"}</span>
+        <span className="truncate text-xs text-gray-400">{venue}</span>
       </div>
 
       <div className="space-y-3">
@@ -66,7 +73,7 @@ export default function MatchCard({ match, onClick }: MatchCardProps) {
           </div>
 
           <div className="text-right">
-            <p className="text-base font-bold text-white">{match.team1Score || "—"}</p>
+            <p className="text-base font-bold text-white">{team1Score}</p>
             {match.team1Overs ? (
               <p className="text-xs text-gray-400">
                 {match.team1Overs} ov
@@ -97,7 +104,7 @@ export default function MatchCard({ match, onClick }: MatchCardProps) {
           </div>
 
           <div className="text-right">
-            <p className="text-base font-bold text-white">{match.team2Score || "—"}</p>
+            <p className="text-base font-bold text-white">{team2Score}</p>
             {match.team2Overs ? (
               <p className="text-xs text-gray-400">
                 {match.team2Overs} ov
@@ -108,7 +115,7 @@ export default function MatchCard({ match, onClick }: MatchCardProps) {
       </div>
 
       <div className="mt-4 border-t border-white/10 pt-3">
-        <p className="line-clamp-2 text-sm text-emerald-300">{match.status || "Match status"}</p>
+        <p className="line-clamp-2 text-sm text-emerald-300">{status}</p>
       </div>
     </motion.div>
   );

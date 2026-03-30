@@ -67,18 +67,17 @@ const HeroMatchCard = ({ match }: HeroMatchCardProps) => {
     );
   }
 
-  const team1Name = match.team1Short || match.team1 || "Team 1";
-  const team2Name = match.team2Short || match.team2 || "Team 2";
+  const team1Name = match.team1Short || match.team1 || "Unknown Team 1";
+  const team2Name = match.team2Short || match.team2 || "Unknown Team 2";
 
-  const team1Score = safeText(match.team1Score, "—");
-  const team2Score = safeText(match.team2Score, "—");
+  const team1Score = match.team1Score || "—";
+  const team2Score = match.team2Score || "—";
 
-  const status = safeText(
-    match.result || match.status,
-    "Match info unavailable",
-  );
-  const venue = safeText(match.venue, "Venue not available");
-  const matchState = safeText(match.matchState, "Match");
+  const status = match.status || match.result || "Live Match";
+  const venue = match.venue || "TBA";
+  const matchState = match.matchState || "Live";
+
+  console.log("RENDERING HERO MATCH CARD WITH:", { team1Name, team2Name, team1Score, team2Score, status });
 
   return (
     <motion.div

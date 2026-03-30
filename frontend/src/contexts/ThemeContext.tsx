@@ -21,13 +21,23 @@ const DEFAULT_THEME: TeamTheme = {
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<TeamTheme>(() => {
-    const saved = localStorage.getItem("ipl-team-theme");
-    return saved ? (JSON.parse(saved) as TeamTheme) : DEFAULT_THEME;
-  });
+  const [theme, setTheme] = useState<TeamTheme>(DEFAULT_THEME);
 
   useEffect(() => {
-    localStorage.setItem("ipl-team-theme", JSON.stringify(theme));
+    const saved = localStorage.getItem("ipl-team-theme");
+    if (saved) {
+      try {
+        setTheme(JSON.parse(saved) as TeamTheme);
+      } catch (e) {
+        console.warn("Failed to parse theme from localStorage");
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (theme.teamId) {
+      localStorage.setItem("ipl-team-theme", JSON.stringify(theme));
+    }
     document.documentElement.style.setProperty("--primary", theme.primaryColor);
     document.documentElement.style.setProperty("--accent", theme.secondaryColor);
     document.documentElement.style.setProperty("--ring", theme.primaryColor);
