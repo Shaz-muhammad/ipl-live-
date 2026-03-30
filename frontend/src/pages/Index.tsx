@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { io } from "socket.io-client";
 import { Header } from "@/components/Header";
-import { HeroMatchCard } from "@/components/HeroMatchCard";
+import HeroMatchCard from "@/components/HeroMatchCard";
 import MatchCard from "@/components/MatchCard";
 import { SectionHeader } from "@/components/SectionHeader";
 import { BlogSection } from "@/components/BlogSection";
