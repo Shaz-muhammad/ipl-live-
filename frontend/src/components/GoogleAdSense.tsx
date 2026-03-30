@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import type { CSSProperties } from "react";
 
 declare global {
@@ -18,20 +18,41 @@ const GoogleAdSense = ({
   className,
   style,
 }: GoogleAdSenseProps) => {
+  const adRef = useRef<HTMLElement | null>(null);
+
   useEffect(() => {
-    try {
-      if (typeof window !== "undefined") {
-        (window.adsbygoogle = window.adsbygoogle || []).push({});
+    const timer = window.setTimeout(() => {
+      try {
+        if (!adRef.current) return;
+
+        const width = adRef.current.offsetWidth;
+        if (width === 0) {
+          console.warn("AdSense skipped: container width is 0");
+          return;
+        }
+
+        if (typeof window !== "undefined") {
+          (window.adsbygoogle = window.adsbygoogle || []).push({});
+        }
+      } catch (error) {
+        console.error("AdSense error:", error);
       }
-    } catch (error) {
-      console.error("AdSense error:", error);
-    }
+    }, 300);
+
+    return () => window.clearTimeout(timer);
   }, []);
 
   return (
     <ins
+      ref={adRef}
       className={`adsbygoogle ${className ?? ""}`}
-      style={{ display: "block", ...style }}
+      style={{
+        display: "block",
+        width: "100%",
+        minWidth: "320px",
+        minHeight: "90px",
+        ...style,
+      }}
       data-ad-client="ca-pub-4465426091216254"
       data-ad-slot={adSlot}
       data-ad-format="auto"

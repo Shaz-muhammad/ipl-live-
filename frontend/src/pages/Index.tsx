@@ -129,10 +129,10 @@ const Index = () => {
           <section>
             <HeroMatchCard match={heroMatch} />
             
-            <div className="mt-6 flex justify-center">
+            <div className="mt-6 mx-auto w-full max-w-[728px] min-h-[90px]">
               <GoogleAdSense
-                adSlot="1234567890" // Replace with real AdSense slot ID
-                className="w-full max-w-[728px]"
+                adSlot="REPLACE_WITH_REAL_SLOT_ID" // TODO: Replace with real AdSense slot ID
+                className="w-full"
                 style={{ minHeight: "90px" }}
               />
             </div>
