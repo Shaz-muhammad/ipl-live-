@@ -60,6 +60,7 @@ function mergeScheduleWithLive(schedule, liveMatches) {
   const merged = schedule.map((fixture) => {
     const live = liveMatches.find((m) => teamsMatch(fixture, m));
 
+    if (live) {
       const team1Data = resolveTeam(fixture.homeTeam);
       const team2Data = resolveTeam(fixture.awayTeam);
       const team1ScoreObj = (live.score || []).find(s => s.inning.toLowerCase().includes(fixture.homeTeam.toLowerCase())) || {};
