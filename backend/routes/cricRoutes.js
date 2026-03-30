@@ -7,9 +7,9 @@ const router = express.Router();
 router.get("/live-scores", async (req, res) => {
   try {
     // REST endpoints must return cached normalized data ONLY
-    const data = getLatestMatches();
-    const apiStatus = getApiStatus(data);
-    return res.json({ apiStatus, data });
+    const { matches, sequence } = getLatestMatches();
+    const apiStatus = getApiStatus(matches);
+    return res.json({ apiStatus, data: matches, sequence });
   } catch (err) {
     return res.status(500).json({ error: "Failed to fetch live scores" });
   }

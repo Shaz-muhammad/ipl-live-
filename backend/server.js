@@ -16,9 +16,11 @@ import { resolveTeam } from "./services/teamMap.js";
 
 // Global state for cached merged matches
 let latestMatches = [];
+let isPolling = false;
+let updateSequence = 0;
 
 export function getLatestMatches() {
-  return latestMatches;
+  return { matches: latestMatches, sequence: updateSequence };
 }
 
 function requireEnv(name) {
@@ -223,20 +225,40 @@ async function start() {
     let pollTimer = null;
 
     async function pollAndEmit() {
+      if (isPolling) {
+        console.log("⏭️ Skipping poll (already running)");
+        return;
+      }
+
+      isPolling = true;
+
       try {
         const payload = await fetchScores();
         const liveMatches = Array.isArray(payload?.data) ? payload.data : [];
 
-        // Simplified: use liveMatches directly from cricService.js as it's already normalized for IPL and live status
-        latestMatches = liveMatches;
-        
-        const apiStatus = payload.apiStatus || (liveMatches.length > 0 ? "live" : "no-match");
+        // In previous steps, we decided to focus only on live matches from the API
+        // but still use the merge logic if needed for data normalization.
+        // If we want ONLY live data, mergeScheduleWithLive currently filters correctly.
+        const schedule = await getIplSchedule();
+        const mergedMatches = mergeScheduleWithLive(schedule, liveMatches);
 
-        // Emit to all clients
-        io.emit("liveScores", { apiStatus, data: latestMatches });
+        latestMatches = mergedMatches;
+        updateSequence += 1;
+
+        const apiStatus = payload.apiStatus || (mergedMatches.length > 0 ? "live" : "no-match");
+
+        // Emit to all clients with sequence number to prevent backward updates
+        io.emit("liveScores", {
+          apiStatus,
+          data: latestMatches,
+          sequence: updateSequence,
+          updatedAt: Date.now(),
+        });
+
+        console.log("📡 Emitted update seq:", updateSequence, "count:", latestMatches.length);
 
         // Update polling mode based on live match status
-        const hasLiveMatch = liveMatches.length > 0;
+        const hasLiveMatch = mergedMatches.length > 0;
         const nextInterval = getPollInterval(hasLiveMatch);
         const mode = hasLiveMatch ? "live" : "standby";
 
@@ -252,15 +274,27 @@ async function start() {
         console.error("❌ [POLL] Socket poll error:", err?.message ?? err);
         // Fallback: emit last known matches even if fetch failed
         const apiStatus = latestMatches.length > 0 ? "live" : "no-match";
-        io.emit("liveScores", { apiStatus, data: latestMatches });
+        io.emit("liveScores", {
+          apiStatus,
+          data: latestMatches,
+          sequence: updateSequence,
+          updatedAt: Date.now(),
+        });
+      } finally {
+        isPolling = false;
       }
     }
 
     io.on("connection", (socket) => {
       console.log("⚡ [SOCKET] Socket connected:", socket.id);
       // On connection, send cached data only. Do NOT trigger fetch per user.
-      const apiStatus = getApiStatus(latestMatches);
-      socket.emit("liveScores", { apiStatus, data: latestMatches });
+      const apiStatus = latestMatches.length > 0 ? "live" : "no-match";
+      socket.emit("liveScores", {
+        apiStatus,
+        data: latestMatches,
+        sequence: updateSequence,
+        updatedAt: Date.now(),
+      });
 
       socket.on("disconnect", () => {
         console.log("❌ [SOCKET] Client disconnected:", socket.id);
