@@ -123,67 +123,12 @@ function mergeScheduleWithLive(schedule, liveMatches) {
       };
     }
 
-    const fixtureDateTime = new Date(`${fixture.dateRaw}T${fixture.timeRaw}:00+05:30`);
+    // Filter out all matches that are not currently live
+    return null;
+  }).filter(Boolean);
 
-    if (fixtureDateTime > now) {
-      const team1Data = resolveTeam(fixture.homeTeam);
-      const team2Data = resolveTeam(fixture.awayTeam);
-      return {
-        ...fixture,
-        team1: fixture.homeTeam,
-        team2: fixture.awayTeam,
-        team1Short: team1Data?.shortName || fixture.homeTeam,
-        team2Short: team2Data?.shortName || fixture.awayTeam,
-        team1Logo: team1Data?.logo || "🏏",
-        team2Logo: team2Data?.logo || "🏏",
-        status: "upcoming",
-        statusText: "Match not started",
-        score: "—",
-        overs: "",
-        teams: [fixture.homeTeam, fixture.awayTeam],
-        venue: fixture.venue,
-        matchState: "Scheduled",
-        tossWinner: "",
-        tossChoice: "",
-        result: "",
-        target: 0,
-        currentInnings: "",
-        currentRunRate: "0",
-        requiredRunRate: "0",
-        commentary: [],
-      };
-    }
-
-    const team1Data = resolveTeam(fixture.homeTeam);
-    const team2Data = resolveTeam(fixture.awayTeam);
-    return {
-      ...fixture,
-      team1: fixture.homeTeam,
-      team2: fixture.awayTeam,
-      team1Short: team1Data?.shortName || fixture.homeTeam,
-      team2Short: team2Data?.shortName || fixture.awayTeam,
-      team1Logo: team1Data?.logo || "🏏",
-      team2Logo: team2Data?.logo || "🏏",
-      status: "finished",
-      statusText: fixture.statusText || "Match completed",
-      score: "—",
-      overs: "",
-      teams: [fixture.homeTeam, fixture.awayTeam],
-      venue: fixture.venue,
-      result: fixture.statusText || "Match Completed",
-      matchState: "Completed",
-      tossWinner: "",
-      tossChoice: "",
-      target: 0,
-      currentInnings: "",
-      currentRunRate: "0",
-      requiredRunRate: "0",
-      commentary: [],
-    };
-  });
-
-  const order = { live: 0, upcoming: 1, finished: 2 };
-  merged.sort((a, b) => order[a.status] - order[b.status]);
+  // Since we only have live matches, sorting is simplified
+  merged.sort((a, b) => (a.matchStarted ? -1 : 1));
 
   return merged;
 }
