@@ -3,6 +3,7 @@ import axios from "axios";
 import { io } from "socket.io-client";
 import { Header } from "@/components/Header";
 import HeroMatchCard from "@/components/HeroMatchCard";
+import AdsterraBanner from "@/components/AdsterraBanner";
 import MatchCard from "@/components/MatchCard";
 import { SectionHeader } from "@/components/SectionHeader";
 import { BlogSection } from "@/components/BlogSection";
@@ -10,10 +11,13 @@ import { Footer } from "@/components/Footer";
 import { WatchLiveModal } from "@/components/WatchLiveModal";
 import { AdminPanel } from "@/components/AdminPanel";
 import { useTeamTheme } from "@/hooks/useTeamTheme";
-import { AdSenseContainer } from "@/components/AdSenseContainer";
 import type { Match } from "@/types/match";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
+const toMatchArray = (value: unknown): Match[] => {
+  return Array.isArray(value) ? (value as Match[]) : [];
+};
 
 const Index = () => {
   const [showWatchLive, setShowWatchLive] = useState(false);
@@ -68,8 +72,8 @@ const Index = () => {
   useEffect(() => {
     const fetchMatches = async () => {
       try {
-        const response = await axios.get(`${API_BASE}/live-scores`);
-        setMatches(Array.isArray(response.data) ? response.data : []);
+        const response = await axios.get<Match[]>(`${API_BASE}/live-scores`);
+        setMatches(toMatchArray(response.data));
       } catch (error) {
         console.error("Failed to fetch matches:", error);
       } finally {
@@ -85,9 +89,9 @@ const Index = () => {
       console.log("✅ Connected to socket");
     });
 
-    socket.on("liveScores", (data: Match[]) => {
+    socket.on("liveScores", (data: unknown) => {
       console.log("MATCHES UPDATE (Live):", data);
-      setMatches(Array.isArray(data) ? data : []);
+      setMatches(toMatchArray(data));
     });
 
     return () => {
@@ -115,19 +119,7 @@ const Index = () => {
         {heroMatch && (
           <section>
             <HeroMatchCard match={heroMatch} />
-
-            <div className="mt-6 flex justify-center">
-              <AdSenseContainer
-                slot="LIVE_SECTION_AD"
-                style={{
-                  display: "block",
-                  width: "100%",
-                  maxWidth: "728px",
-                  height: "90px",
-                }}
-                className="min-h-[90px]"
-              />
-            </div>
+            <AdsterraBanner />
           </section>
         )}
 
@@ -135,12 +127,14 @@ const Index = () => {
           <section className="space-y-6">
             <SectionHeader icon="🏏" title="Live & Recent Matches" />
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {listMatches.map((m) => (
-                <MatchCard
-                  key={m.id}
-                  match={m}
-                  onClick={() => setSelectedMatchId(m.id)}
-                />
+              {listMatches.map((m, i) => (
+                <div key={m.id}>
+                  <MatchCard
+                    match={m}
+                    onClick={() => setSelectedMatchId(m.id)}
+                  />
+                  {i === 2 && <AdsterraBanner />}
+                </div>
               ))}
             </div>
           </section>

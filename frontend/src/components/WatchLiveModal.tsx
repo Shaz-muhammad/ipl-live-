@@ -35,7 +35,7 @@ export function WatchLiveModal({ open, onClose }: Props) {
         const docs = Array.isArray(res.data) ? res.data : [];
         const grouped: Record<string, string[]> = {};
         
-        docs.forEach((doc: { matchId?: string; links?: string[] }) => {
+        docs.forEach((doc: any) => {
           if (doc.matchId && Array.isArray(doc.links) && doc.links.length > 0) {
             grouped[doc.matchId] = doc.links;
           }

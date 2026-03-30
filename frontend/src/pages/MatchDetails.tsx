@@ -12,30 +12,22 @@ import type { Match } from "@/types/match";
 
 type Tab = "summary" | "scorecard" | "commentary" | "info";
 
+const isLiveMatch = (match: Match): boolean => {
+  const state = (match.matchState || "").toLowerCase();
+  const status = (match.status || "").toLowerCase();
+  return (
+    state === "in progress" ||
+    status.includes("need") ||
+    status.includes("opt to bat") ||
+    Boolean(match.team1Score) ||
+    Boolean(match.team2Score)
+  );
+};
+
 const MatchDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<Tab>("summary");
-
-  // 🧠 SEO Optimization
-  useEffect(() => {
-    if (match) {
-      const t1 = match.team1Short || match.team1;
-      const t2 = match.team2Short || match.team2;
-      document.title = `${t1} vs ${t2} Live Score | IPL 2026 Updates`;
-
-      // Update meta description dynamically
-      const metaDescription = document.querySelector(
-        'meta[name="description"]',
-      );
-      if (metaDescription) {
-        metaDescription.setAttribute(
-          "content",
-          `Live score and updates for ${t1} vs ${t2}. ${match.status || ""}. Follow IPL 2026 real-time updates on IPL LIVE.`,
-        );
-      }
-    }
-  }, [match]);
 
   const {
     data: match,
@@ -43,14 +35,34 @@ const MatchDetails = () => {
     isError,
   } = useQuery<Match>({
     queryKey: ["match", id],
-    enabled: !!id,
+    enabled: Boolean(id),
     queryFn: async () => {
-      const res = await api.get(`/match/${id}`);
+      const res = await api.get<Match>(`/match/${id}`);
       return res.data;
     },
     retry: 1,
     refetchInterval: 15000,
   });
+
+  useEffect(() => {
+    if (!match) return;
+
+    const t1 = match.team1Short || match.team1;
+    const t2 = match.team2Short || match.team2;
+
+    document.title = `${t1} vs ${t2} Live Score | IPL 2026 Updates`;
+
+    const metaDescription = document.querySelector<HTMLMetaElement>(
+      'meta[name="description"]',
+    );
+
+    if (metaDescription) {
+      metaDescription.setAttribute(
+        "content",
+        `Live score and updates for ${t1} vs ${t2}. ${match.status || ""}. Follow IPL 2026 real-time updates on IPL LIVE.`,
+      );
+    }
+  }, [match]);
 
   if (isLoading) {
     return (
@@ -80,9 +92,12 @@ const MatchDetails = () => {
     );
   }
 
+  const summaryBatting = match.batting?.slice(0, 3) ?? [];
+  const summaryBowling = match.bowling?.slice(0, 3) ?? [];
+  const commentaryEntries = match.commentary ?? [];
+
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <div className="glass-card border-b border-border/50 px-4 py-3 sticky top-0 z-50">
         <div className="container mx-auto flex items-center gap-3">
           <button
@@ -98,15 +113,12 @@ const MatchDetails = () => {
           </h1>
 
           <div className="ml-auto flex items-center gap-2">
-            {(match.matchState || "").toLowerCase() === "in progress" && (
-              <LiveBadge />
-            )}
+            {isLiveMatch(match) && <LiveBadge />}
           </div>
         </div>
       </div>
 
       <main className="container mx-auto px-4 py-6 space-y-6">
-        {/* Score Summary Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -164,9 +176,8 @@ const MatchDetails = () => {
           </div>
         </motion.div>
 
-        {/* Tabs */}
         <div className="flex gap-1 border-b border-border/30 overflow-x-auto no-scrollbar">
-          {(["summary", "scorecard", "commentary", "info"] as Tab[]).map(
+          {(["summary", "scorecard", "commentary", "info"] as const).map(
             (tab) => (
               <button
                 key={tab}
@@ -183,7 +194,6 @@ const MatchDetails = () => {
           )}
         </div>
 
-        {/* Tab Content */}
         <div className="space-y-6">
           {activeTab === "summary" && (
             <div className="space-y-4">
@@ -191,6 +201,7 @@ const MatchDetails = () => {
                 <h3 className="text-xs font-bold uppercase text-muted-foreground border-b border-border/10 pb-2">
                   Match Highlights
                 </h3>
+
                 <div className="space-y-2 text-xs">
                   {match.tossWinner && (
                     <p className="text-foreground">
@@ -198,12 +209,14 @@ const MatchDetails = () => {
                       {match.tossWinner} elected to {match.tossChoice}
                     </p>
                   )}
-                  {match.target && (
+
+                  {typeof match.target === "number" && (
                     <p className="text-neon-blue font-bold">
                       <span className="text-muted-foreground">Target:</span>{" "}
                       {match.target} runs
                     </p>
                   )}
+
                   {match.rrr && (
                     <p className="text-neon-red font-bold">
                       <span className="text-muted-foreground">
@@ -212,6 +225,7 @@ const MatchDetails = () => {
                       {match.rrr}
                     </p>
                   )}
+
                   {match.currentInnings && (
                     <p className="text-foreground">
                       <span className="text-muted-foreground">Innings:</span>{" "}
@@ -220,19 +234,20 @@ const MatchDetails = () => {
                   )}
                 </div>
               </section>
-              <Scorecard
-                batting={match.batting?.slice(0, 3)}
-                bowling={match.bowling?.slice(0, 3)}
-              />
+
+              <Scorecard batting={summaryBatting} bowling={summaryBowling} />
             </div>
           )}
 
           {activeTab === "scorecard" && (
-            <Scorecard batting={match.batting} bowling={match.bowling} />
+            <Scorecard
+              batting={match.batting ?? []}
+              bowling={match.bowling ?? []}
+            />
           )}
 
           {activeTab === "commentary" && (
-            <Commentary entries={match.commentary || []} />
+            <Commentary entries={commentaryEntries} />
           )}
 
           {activeTab === "info" && (
@@ -242,28 +257,31 @@ const MatchDetails = () => {
                   <p className="text-muted-foreground mb-1 uppercase tracking-tighter">
                     Venue
                   </p>
-                  <p className="font-bold">{match.venue}</p>
+                  <p className="font-bold">{match.venue || "—"}</p>
                 </div>
+
                 <div>
                   <p className="text-muted-foreground mb-1 uppercase tracking-tighter">
                     Date & Time
                   </p>
                   <p className="font-bold">
-                    {match.date} • {match.time}
+                    {match.date || "—"} {match.time ? `• ${match.time}` : ""}
                   </p>
                 </div>
+
                 <div>
                   <p className="text-muted-foreground mb-1 uppercase tracking-tighter">
                     Series
                   </p>
                   <p className="font-bold">Indian Premier League 2026</p>
                 </div>
+
                 <div>
                   <p className="text-muted-foreground mb-1 uppercase tracking-tighter">
                     Match State
                   </p>
                   <p className="font-bold uppercase text-primary">
-                    {match.matchState || match.status}
+                    {match.matchState || match.status || "—"}
                   </p>
                 </div>
               </div>

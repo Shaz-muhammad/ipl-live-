@@ -1,20 +1,61 @@
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
-import type { Match } from "../types/match";
-import {
-  formatOvers,
-  formatStatus,
-  getInitials,
-  isLiveLike,
-  getTeamLabel,
-  safeText,
-} from "../utils/matchHelpers";
+import type { Match } from "@/types/match";
 
 type HeroMatchCardProps = {
   match?: Match;
 };
 
-export default function HeroMatchCard({ match }: HeroMatchCardProps) {
+const safeText = (value: unknown, fallback = "—"): string => {
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    return trimmed || fallback;
+  }
+
+  if (typeof value === "number") {
+    return String(value);
+  }
+
+  return fallback;
+};
+
+const isValidImageUrl = (value?: string): boolean => {
+  if (!value || typeof value !== "string") return false;
+
+  const trimmed = value.trim();
+
+  return (
+    trimmed.startsWith("http://") ||
+    trimmed.startsWith("https://") ||
+    trimmed.startsWith("/") ||
+    trimmed.startsWith("data:image/")
+  );
+};
+
+const getTeamLabel = (shortName?: string, fullName?: string): string => {
+  const shortSafe = typeof shortName === "string" ? shortName.trim() : "";
+  const fullSafe = typeof fullName === "string" ? fullName.trim() : "";
+
+  if (shortSafe) return shortSafe;
+  if (fullSafe) return fullSafe;
+  return "Team";
+};
+
+const getInitials = (name?: string): string => {
+  const text = safeText(name, "T");
+  const parts = text.split(" ").filter(Boolean);
+
+  if (parts.length === 0) return "T";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+
+  return `${parts[0][0] || ""}${parts[1][0] || ""}`.toUpperCase();
+};
+
+const formatOvers = (overs?: string): string => {
+  const safeOvers = safeText(overs, "");
+  return safeOvers ? `(${safeOvers})` : "";
+};
+
+const HeroMatchCard = ({ match }: HeroMatchCardProps) => {
   if (!match) {
     return (
       <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-xl backdrop-blur-md">
@@ -29,10 +70,15 @@ export default function HeroMatchCard({ match }: HeroMatchCardProps) {
   const team1Name = getTeamLabel(match.team1Short, match.team1);
   const team2Name = getTeamLabel(match.team2Short, match.team2);
 
-  const status = formatStatus(match);
+  const team1Score = safeText(match.team1Score, "—");
+  const team2Score = safeText(match.team2Score, "—");
+
+  const status = safeText(
+    match.result || match.status,
+    "Match info unavailable",
+  );
   const venue = safeText(match.venue, "Venue not available");
   const matchState = safeText(match.matchState, "Match");
-  const isLive = isLiveLike(match);
 
   return (
     <motion.div
@@ -57,7 +103,7 @@ export default function HeroMatchCard({ match }: HeroMatchCardProps) {
       <div className="grid gap-5 md:grid-cols-2">
         <div className="rounded-2xl bg-white/5 p-5">
           <div className="flex items-center gap-4">
-            {match.team1Logo ? (
+            {isValidImageUrl(match.team1Logo) ? (
               <img
                 src={match.team1Logo}
                 alt={team1Name}
@@ -74,7 +120,7 @@ export default function HeroMatchCard({ match }: HeroMatchCardProps) {
                 {team1Name}
               </p>
               <p className="mt-1 text-2xl font-bold text-cyan-300">
-                {safeText(match.team1Score, "—")}
+                {team1Score}
               </p>
               {match.team1Overs ? (
                 <p className="text-sm text-gray-400">
@@ -87,7 +133,7 @@ export default function HeroMatchCard({ match }: HeroMatchCardProps) {
 
         <div className="rounded-2xl bg-white/5 p-5">
           <div className="flex items-center gap-4">
-            {match.team2Logo ? (
+            {isValidImageUrl(match.team2Logo) ? (
               <img
                 src={match.team2Logo}
                 alt={team2Name}
@@ -104,7 +150,7 @@ export default function HeroMatchCard({ match }: HeroMatchCardProps) {
                 {team2Name}
               </p>
               <p className="mt-1 text-2xl font-bold text-fuchsia-300">
-                {safeText(match.team2Score, "—")}
+                {team2Score}
               </p>
               {match.team2Overs ? (
                 <p className="text-sm text-gray-400">
@@ -121,4 +167,6 @@ export default function HeroMatchCard({ match }: HeroMatchCardProps) {
       </div>
     </motion.div>
   );
-}
+};
+
+export default HeroMatchCard;
