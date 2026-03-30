@@ -29,13 +29,20 @@
     <meta name="twitter:image" content="/preview.jpeg" />
 
     <!-- Google AdSense -->
-    <script async 
-      src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=YOUR_ADSENSE_ID" 
-      crossorigin="anonymous">
-    </script>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4465426091216254" 
+      crossorigin="anonymous"></script>
 
-    <!-- Adsterra Popunder -->
-    <script src="https://pl29015975.profitablecpmratenetwork.com/73/7d/2f/737d2f041ba74a76dcd05146131d7269.js"></script>
+    <!-- Adsterra Popunder Feature Flag & Conditional Loader -->
+    <script>
+      window.__ENABLE_ADSTERRA_POPUNDER__ = false; // Set to false when AdSense is active on the page
+    </script>
+    <script>
+      if (window.__ENABLE_ADSTERRA_POPUNDER__) {
+        const s = document.createElement("script");
+        s.src = "https://pl29015975.profitablecpmratenetwork.com/73/7d/2f/737d2f041ba74a76dcd05146131d7269.js";
+        document.head.appendChild(s);
+      }
+    </script>
   </head>
 
   <body>

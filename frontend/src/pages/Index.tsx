@@ -1,8 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
+/**
+ * Adsterra and Google AdSense Coexistence Policy:
+ * 1. Google AdSense and non-Google ads can coexist on the same page.
+ * 2. However, to stay policy-safe, Adsterra popunders MUST remain disabled
+ *    on any page that actively displays Google AdSense units.
+ * 3. Use the window.__ENABLE_ADSTERRA_POPUNDER__ flag in index.html to 
+ *    control popunder visibility globally.
+ */
 import axios from "axios";
 import { io } from "socket.io-client";
 import { Header } from "@/components/Header";
 import HeroMatchCard from "@/components/HeroMatchCard";
+import GoogleAdSense from "@/components/GoogleAdSense";
 import AdsterraBanner from "@/components/AdsterraBanner";
 import MatchCard from "@/components/MatchCard";
 import { SectionHeader } from "@/components/SectionHeader";
@@ -119,7 +128,14 @@ const Index = () => {
         {heroMatch && (
           <section>
             <HeroMatchCard match={heroMatch} />
-            <AdsterraBanner />
+            
+            <div className="mt-6 flex justify-center">
+              <GoogleAdSense
+                adSlot="1234567890" // Replace with real AdSense slot ID
+                className="w-full max-w-[728px]"
+                style={{ minHeight: "90px" }}
+              />
+            </div>
           </section>
         )}
 
