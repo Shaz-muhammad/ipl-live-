@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, ExternalLink, Tv, ArrowRight } from "lucide-react";
 import { api } from "@/services/api";
 import { useEffect, useMemo, useState } from "react";
-import { AdSenseContainer } from "./AdSenseContainer";
+import GoogleAdSense from "./GoogleAdSense";
 
 interface Props {
   open: boolean;
@@ -98,8 +98,8 @@ export function WatchLiveModal({ open, onClose }: Props) {
                 <div className="text-center space-y-2">
                   <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Advertisement</p>
                   <div className="glass-card p-4 bg-secondary/10 border border-dashed border-border/20 rounded-xl min-w-[300px] min-h-[250px] flex items-center justify-center">
-                    <AdSenseContainer 
-                      slot="INTERSTITIAL_AD" 
+                    <GoogleAdSense 
+                      adSlot="REPLACE_WITH_REAL_SLOT_ID" 
                       style={{ display: "block", width: "300px", height: "250px" }}
                       className="mx-auto"
                     />
