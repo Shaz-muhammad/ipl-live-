@@ -1,52 +1,48 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef } from 'react';
 
-/**
- * NativeBannerAd Component
- * Renders an Adsterra Native Banner ad dynamically.
- * Follows React best practices for script injection and cleanup.
- */
-const NativeBannerAd = () => {
-  const adContainerRef = useRef<HTMLDivElement>(null);
-  const scriptLoadedRef = useRef(false);
+export function NativeBannerAd() {
+  const adRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Container ID from the provided ad snippet
-    const containerId = "container-f6ceb718de91429d8729ddc61b2ce8c5";
-    
-    // Check if script already exists in the document to prevent duplication
-    const scriptUrl = "https://pl29023906.profitablecpmratenetwork.com/f6ceb718de91429d8729ddc61b2ce8c5/invoke.js";
-    
-    if (!scriptLoadedRef.current) {
-      const script = document.createElement("script");
-      script.src = scriptUrl;
-      script.async = true;
-      script.setAttribute("data-cfasync", "false");
-      
-      // Append script to document
-      document.body.appendChild(script);
-      scriptLoadedRef.current = true;
+    console.log('NativeBannerAd component mounted');
+    const containerId = 'container-f6ceb718de91429d8729ddc61b2ce8c5';
+    const scriptSrc = 'https://pl29023906.profitablecpmratenetwork.com/f6ceb718de91429d8729ddc61b2ce8c5/invoke.js';
 
-      // Optional: Cleanup function to remove script on unmount
-      // Note: Some ad networks might not like scripts being removed/re-added frequently
-      return () => {
-        // Only remove if we want to completely clean up. 
-        // For ads, usually we keep it once loaded unless it causes issues.
-      };
+    // Check if script already exists to prevent duplicate loading
+    const existingScript = document.querySelector(`script[src="${scriptSrc}"]`);
+    
+    if (!existingScript) {
+      console.log('Injecting Adsterra script...');
+      const script = document.createElement('script');
+      script.src = scriptSrc;
+      script.async = true;
+      script.setAttribute('data-cfasync', 'false');
+      document.body.appendChild(script);
+    } else {
+      console.log('Adsterra script already exists, skipping injection');
     }
+
+    return () => {
+      console.log('NativeBannerAd component unmounted');
+      // Optional: Cleanup script if needed, but usually ads scripts are fine to stay
+    };
   }, []);
 
   return (
-    <div className="flex flex-col items-center justify-center my-8 w-full overflow-hidden">
-      <div 
-        id="container-f6ceb718de91429d8729ddc61b2ce8c5" 
-        ref={adContainerRef}
-        className="min-h-[250px] w-full flex justify-center items-center bg-white/5 rounded-xl border border-white/10"
-      >
-        {/* Adsterra will inject the ad content here */}
-        <p className="text-[10px] text-muted-foreground uppercase tracking-widest absolute">Advertisement</p>
-      </div>
+    <div 
+      ref={adRef}
+      className="native-banner-ad-container"
+      style={{ 
+        margin: '16px 0', 
+        textAlign: 'center',
+        width: '100%',
+        minHeight: '100px', // Ensure space is reserved
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center'
+      }}
+    >
+      <div id="container-f6ceb718de91429d8729ddc61b2ce8c5"></div>
     </div>
   );
-};
-
-export default NativeBannerAd;
+}

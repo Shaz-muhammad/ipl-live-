@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Newspaper, ChevronRight, Info } from "lucide-react";
 import { BlogCard, type Blog } from "./BlogCard";
 import { SectionHeader } from "./SectionHeader";
+import { NativeBannerAd } from "./NativeBannerAd";
 import { api } from "@/services/api";
 
 const CACHE_KEY = "ipl_latest_news_cache";
@@ -98,6 +99,12 @@ export function BlogSection() {
           {blogs.map((blog, i) => (
             <div key={blog.id} className="contents">
               <BlogCard blog={blog} index={i} />
+              {/* Show Ad after the 2nd blog post (index 1) */}
+              {i === 1 && (
+                <div className="col-span-full">
+                  <NativeBannerAd />
+                </div>
+              )}
             </div>
           ))}
         </div>
