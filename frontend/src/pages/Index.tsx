@@ -96,15 +96,17 @@ const Index = () => {
       result = selectedMatch;
     } else if (liveMatches.length > 0) {
       result = liveMatches[0];
+    } else if (matches.length > 0) {
+      result = matches[0];
     }
     console.log("CALCULATED HERO MATCH:", result);
     return result;
-  }, [selectedMatch, liveMatches]);
+  }, [selectedMatch, liveMatches, matches]);
 
   const listMatches = useMemo(() => {
-    if (!heroMatch) return liveMatches;
-    return liveMatches.filter((m) => m.id !== heroMatch.id);
-  }, [liveMatches, heroMatch]);
+    if (!heroMatch) return matches;
+    return matches.filter((m) => m.id !== heroMatch.id);
+  }, [matches, heroMatch]);
 
   useEffect(() => {
     if (heroMatch) {
@@ -224,6 +226,12 @@ const Index = () => {
           className="flex-1 rounded-lg bg-destructive/20 py-2 text-xs font-heading font-bold text-neon-red"
         >
           📺 Watch Live
+        </button>
+        <button
+          onClick={() => setShowAdmin(true)}
+          className="flex-1 rounded-lg bg-secondary py-2 text-xs font-heading font-bold text-secondary-foreground"
+        >
+          🔐 Admin
         </button>
       </div>
 
