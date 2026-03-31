@@ -9,6 +9,7 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import AdminSecretPage from "./pages/AdminSecretPage";
+import SocialBarAd from "./components/SocialBarAd";
 import NotFound from "./pages/NotFound";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import ClientOnly from "@/components/ClientOnly";
@@ -33,6 +34,7 @@ const App = () => (
         <ClientOnly>
           <Toaster />
           <Sonner />
+          <SocialBarAd />
           <BrowserRouter>
             <Suspense fallback={<Loading />}>
               <Routes>

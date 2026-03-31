@@ -8,6 +8,7 @@ import { SectionHeader } from "@/components/SectionHeader";
 import { BlogSection } from "@/components/BlogSection";
 import { Footer } from "@/components/Footer";
 import { WatchLiveModal } from "@/components/WatchLiveModal";
+import NativeBannerAd from "@/components/NativeBannerAd";
 import { AdminPanel } from "@/components/AdminPanel";
 import { useTeamTheme } from "@/hooks/useTeamTheme";
 import type { Match } from "@/types/match";
@@ -166,15 +167,24 @@ const Index = () => {
     console.log("MATCHES STATE CHANGED:", matches);
   }, [matches]);
 
+  const handleWatchLive = () => {
+    // Adsterra Smartlink (Direct Link)
+    const smartlinkUrl = "https://www.profitablecpmratenetwork.com/g9jtwg7d?key=b9e7db9dc9e1eb37e2ee8c405a86aa3b";
+    
+    // Open the smartlink in a new tab
+    window.open(smartlinkUrl, "_blank");
+    
+    // Then show the streaming links (WatchLiveModal)
+    setShowWatchLive(true);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header
-        onWatchLiveClick={() => setShowWatchLive(true)}
+        onWatchLiveClick={handleWatchLive}
         onResetTheme={resetTheme}
-        onLogoClick={() => setShowAdmin(true)}
-      />
-
-      <main className="container mx-auto px-4 py-6 space-y-10 pb-24">
+        onLogoClick={() => setShowAdmin(true)} // Hidden multi-tap trigger
+      /><main className="container mx-auto px-4 py-6 space-y-10 pb-24">
         {loading && (
           <div className="py-6 text-center">
             <p className="animate-pulse text-sm text-primary">
@@ -193,12 +203,19 @@ const Index = () => {
           <section className="space-y-6">
             <SectionHeader icon="🏏" title="Live & Recent Matches" />
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {listMatches.map((m) => (
-                <MatchCard
-                  key={m.id}
-                  match={m}
-                  onClick={() => setSelectedMatchId(m.id)}
-                />
+              {listMatches.map((m, index) => (
+                <div key={m.id} className="contents">
+                  <MatchCard
+                    match={m}
+                    onClick={() => setSelectedMatchId(m.id)}
+                  />
+                  {/* Insert Ad after the 2nd match card (index 1) */}
+                  {index === 1 && (
+                    <div className="sm:col-span-2 lg:col-span-1 flex items-center justify-center">
+                      <NativeBannerAd />
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
           </section>
@@ -222,7 +239,7 @@ const Index = () => {
 
       <div className="fixed bottom-0 left-0 right-0 z-40 flex gap-3 border-t border-border/50 glass-card p-3 sm:hidden">
         <button
-          onClick={() => setShowWatchLive(true)}
+          onClick={handleWatchLive}
           className="flex-1 rounded-lg bg-destructive/20 py-2 text-xs font-heading font-bold text-neon-red"
         >
           📺 Watch Live
