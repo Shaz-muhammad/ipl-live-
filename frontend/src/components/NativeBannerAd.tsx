@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 
-export function NativeBannerAd() {
+export default function NativeBannerAd() {
   const adRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

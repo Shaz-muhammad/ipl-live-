@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Newspaper, ChevronRight, Info } from "lucide-react";
 import { BlogCard, type Blog } from "./BlogCard";
 import { SectionHeader } from "./SectionHeader";
-import { NativeBannerAd } from "./NativeBannerAd";
+import NativeBannerAd from "./NativeBannerAd";
 import { api } from "@/services/api";
 
 const CACHE_KEY = "ipl_latest_news_cache";
