@@ -26,11 +26,6 @@ const About = () => {
       desc: "Curated streaming links to watch the action live from any device."
     },
     {
-      icon: <Users className="h-6 w-6" />,
-      title: "Admin Panel",
-      desc: "A powerful console for administrators to manage live match data."
-    },
-    {
       icon: <Shield className="h-6 w-6" />,
       title: "Futuristic UI",
       desc: "A cutting-edge glassmorphic design built for speed and mobile responsiveness."

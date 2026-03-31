@@ -244,12 +244,6 @@ const Index = () => {
         >
           📺 Watch Live
         </button>
-        <button
-          onClick={() => setShowAdmin(true)}
-          className="flex-1 rounded-lg bg-secondary py-2 text-xs font-heading font-bold text-secondary-foreground"
-        >
-          🔐 Admin
-        </button>
       </div>
 
       <WatchLiveModal
