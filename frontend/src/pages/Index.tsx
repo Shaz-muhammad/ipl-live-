@@ -9,7 +9,7 @@ import { BlogSection } from "@/components/BlogSection";
 import { Footer } from "@/components/Footer";
 import { WatchLiveModal } from "@/components/WatchLiveModal";
 import NativeBannerAd from "@/components/NativeBannerAd";
-import GoogleAd from "@/components/GoogleAd";
+import AdsterraBanner468 from "@/components/AdsterraBanner468";
 import { AdminPanel } from "@/components/AdminPanel";
 import { useTeamTheme } from "@/hooks/useTeamTheme";
 import type { Match } from "@/types/match";
@@ -181,7 +181,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <GoogleAd adSlot="TOP_HEADER_SLOT_ID" />
+      <AdsterraBanner468 />
       <Header
         onWatchLiveClick={handleWatchLive}
         onResetTheme={resetTheme}
@@ -198,7 +198,7 @@ const Index = () => {
         {heroMatch && (
           <section>
             <HeroMatchCard match={heroMatch} />
-            <GoogleAd adSlot="LIVE_SCORE_SLOT_ID" />
+            <AdsterraBanner468 />
           </section>
         )}
 
