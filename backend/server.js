@@ -187,15 +187,19 @@ async function start() {
         const schedule = await getIplSchedule();
         const mergedMatches = mergeScheduleWithLive(schedule, liveMatches);
 
+        // Update cache before emitting
         latestMatches = mergedMatches;
         
-        const apiStatus = payload.apiStatus || (mergedMatches.length > 0 ? "live" : "no-match");
+        // Calculate apiStatus strictly based on live matches
+        const hasLiveMatch = mergedMatches.some(
+          (m) => (m.matchState || "").toLowerCase().includes("progress")
+        );
+        const apiStatus = hasLiveMatch ? "live" : "standby";
 
         // Emit to all clients
         io.emit("liveScores", { apiStatus, data: latestMatches });
 
         // Update polling mode based on live match status
-        const hasLiveMatch = mergedMatches.length > 0;
         const nextInterval = getPollInterval(hasLiveMatch);
         const mode = hasLiveMatch ? "live" : "standby";
 
@@ -217,8 +221,12 @@ async function start() {
 
     io.on("connection", (socket) => {
       console.log("⚡ [SOCKET] Socket connected:", socket.id);
-      // On connection, send cached data only. Do NOT trigger fetch per user.
-      const apiStatus = latestMatches.length > 0 ? "live" : "no-match";
+      
+      const hasLiveMatch = latestMatches.some(
+        (m) => (m.matchState || "").toLowerCase().includes("progress")
+      );
+      const apiStatus = hasLiveMatch ? "live" : "standby";
+
       socket.emit("liveScores", { apiStatus, data: latestMatches });
 
       socket.on("disconnect", () => {

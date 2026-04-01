@@ -68,23 +68,14 @@ const Index = () => {
     return matches.filter((m) => {
       const state = (m.matchState || "").toLowerCase();
       const status = (m.status || "").toLowerCase();
+      const result = (m.result || "").toLowerCase();
 
-      // Always include if explicitly marked as live or in progress
-      if (state.includes("progress") || state.includes("live") || m.status === "live") {
-        return true;
-      }
-
-      // Fallback: include if there is any score reported
-      if (Boolean(m.team1Score) || Boolean(m.team2Score)) {
-        return true;
-      }
-
-      // Fallback: include if status indicates active play
-      if (status.includes("need") || status.includes("opt") || status.includes("chose")) {
-        return true;
-      }
-
-      return false;
+      return (
+        state.includes("progress") &&
+        !state.includes("complete") &&
+        !status.includes("won by") &&
+        !result.includes("won by")
+      );
     });
   }, [matches]);
 
@@ -93,22 +84,12 @@ const Index = () => {
   }, [matches, selectedMatchId]);
 
   const heroMatch = useMemo(() => {
-    let result: Match | undefined = undefined;
-    if (selectedMatch) {
-      result = selectedMatch;
-    } else if (liveMatches.length > 0) {
-      result = liveMatches[0];
-    } else if (matches.length > 0) {
-      result = matches[0];
-    }
-    console.log("CALCULATED HERO MATCH:", result);
-    return result;
-  }, [selectedMatch, liveMatches, matches]);
+    return liveMatches.length > 0 ? liveMatches[0] : undefined;
+  }, [liveMatches]);
 
   const listMatches = useMemo(() => {
-    if (!heroMatch) return matches;
-    return matches.filter((m) => m.id !== heroMatch.id);
-  }, [matches, heroMatch]);
+    return liveMatches.slice(1);
+  }, [liveMatches]);
 
   useEffect(() => {
     if (heroMatch) {

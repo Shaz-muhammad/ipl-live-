@@ -233,12 +233,12 @@ import axios from "axios";
  
  export function getApiStatus(mergedMatches = []) {
    const now = Date.now();
-   const hasLiveMatch = mergedMatches.some((m) => m.status === "live" || m.matchState === "live" || m.matchState === "In Progress");
+   const hasLiveMatch = mergedMatches.some((m) => (m.matchState || "").toLowerCase().includes("progress"));
 
    if (hasLiveMatch) return "live";
    if (now < pauseUntil) return cachedData.length > 0 ? "live" : "paused";
    if (cachedData.length === 0 && lastFetchTime === 0) return "unavailable";
-   return "no-match";
+   return "standby";
  }
  
  export async function getMatchDetails(matchId) { 
