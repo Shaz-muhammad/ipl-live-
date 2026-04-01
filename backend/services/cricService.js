@@ -68,31 +68,20 @@ import axios from "axios";
    const team2 = 
      match?.matchInfo?.team2?.teamName?.toLowerCase() || ""; 
   
-   return ( 
-     seriesName.includes("indian premier league") || 
-     seriesName.includes("ipl") || 
-     seriesName.includes("t20") || // More lenient for IPL matches often categorized as T20
-     team1.includes("mumbai") || 
-     team1.includes("chennai") || 
-     team1.includes("royal challengers") || 
-     team1.includes("kolkata") || 
-     team1.includes("hyderabad") || 
-     team1.includes("delhi capitals") || 
-     team1.includes("rajasthan") || 
-     team1.includes("punjab") || 
-     team1.includes("lucknow") || 
-     team1.includes("gujarat") || 
-     team2.includes("mumbai") || 
-     team2.includes("chennai") || 
-     team2.includes("royal challengers") || 
-     team2.includes("kolkata") || 
-     team2.includes("hyderabad") || 
-     team2.includes("delhi capitals") || 
-     team2.includes("rajasthan") || 
-     team2.includes("punjab") || 
-     team2.includes("lucknow") || 
-     team2.includes("gujarat") 
-   ); 
+   const isIPLSeries = seriesName.includes("indian premier league") || seriesName.includes("ipl");
+   if (isIPLSeries) return true;
+
+   // Backup: Check if BOTH teams are known IPL teams (for cases where series name is missing or generic)
+   const iplTeams = [
+     "mumbai", "chennai", "royal challengers", "kolkata", 
+     "hyderabad", "delhi capitals", "rajasthan", "punjab", 
+     "lucknow", "gujarat"
+   ];
+   
+   const isTeam1IPL = iplTeams.some(t => team1.includes(t));
+   const isTeam2IPL = iplTeams.some(t => team2.includes(t));
+
+   return isTeam1IPL && isTeam2IPL;
  } 
  
  function isLiveMatch(match) { 
@@ -102,6 +91,11 @@ import axios from "axios";
    const stateTitle = info?.stateTitle?.toLowerCase?.() || ""; 
    const status = info?.status?.toLowerCase?.() || ""; 
  
+   // Explicitly exclude finished or abandoned matches
+    if (state === "result" || state === "complete" || state === "abandoned" || status.includes("won by") || status.includes("drawn") || status.includes("abandoned") || status.includes("no result")) {
+      return false;
+    }
+
    return Boolean( 
      state === "in progress" || 
      state === "live" ||
@@ -109,8 +103,7 @@ import axios from "axios";
      status.includes("need") || 
      status.includes("opt to bat") || 
      status.includes("won toss") || 
-     score?.team1Score?.inngs1 || 
-     score?.team2Score?.inngs1 
+     (state !== "preview" && (score?.team1Score?.inngs1 || score?.team2Score?.inngs1))
    ); 
  } 
  
